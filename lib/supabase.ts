@@ -21,7 +21,13 @@ function createUnavailableClient(): SupabaseClient<any, any> {
 // Avoid constructing Supabase client when env vars are absent (e.g., at build time)
 export const supabase: SupabaseClient<any, any> =
   supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey)
+    ? createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          storage: typeof window === "undefined" ? undefined : window.localStorage,
+        },
+      })
     : createUnavailableClient()
 
 
