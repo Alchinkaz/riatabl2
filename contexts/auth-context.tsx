@@ -20,10 +20,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true
     ;(async () => {
-      const currentUser = await authService.getCurrentUserAsync?.()
-      if (!active) return
-      setUser(currentUser)
-      setIsLoading(false)
+      try {
+        const currentUser = await authService.getCurrentUserAsync?.()
+        if (!active) return
+        setUser(currentUser)
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("Auth initialization error", err)
+      } finally {
+        if (!active) return
+        setIsLoading(false)
+      }
     })()
     return () => {
       active = false
