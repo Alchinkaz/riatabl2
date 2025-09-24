@@ -1,5 +1,5 @@
 {
-  "name": "my-v0-project",
+  "name": "sales-calculator",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -37,7 +37,6 @@
     "@radix-ui/react-toggle": "latest",
     "@radix-ui/react-toggle-group": "latest",
     "@radix-ui/react-tooltip": "latest",
-    "@vercel/analytics": "latest",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
