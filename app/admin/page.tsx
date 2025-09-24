@@ -37,8 +37,8 @@ export default function AdminDashboard() {
   const [filterDateTo, setFilterDateTo] = useState("")
   const [users, setUsers] = useState(userStorage.getAll())
 
-  const loadRecords = () => {
-    const allRecords = recordStorage.getAll()
+  const loadRecords = async () => {
+    const allRecords = await recordStorage.getAll()
     setRecords(allRecords)
     setIsLoading(false)
   }
@@ -90,15 +90,15 @@ export default function AdminDashboard() {
     setIsFormOpen(true)
   }
 
-  const handleDeleteRecord = (record: StoredRecord) => {
+  const handleDeleteRecord = async (record: StoredRecord) => {
     if (confirm("Удалить эту запись? Это действие нельзя отменить.")) {
-      recordStorage.delete(record.id)
-      loadRecords()
+      await recordStorage.delete(record.id)
+      await loadRecords()
     }
   }
 
-  const handleFormSuccess = () => {
-    loadRecords()
+  const handleFormSuccess = async () => {
+    await loadRecords()
   }
 
   const clearFilters = () => {

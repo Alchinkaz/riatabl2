@@ -16,11 +16,21 @@ export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (user) {
-      const allRecords = isAdmin ? recordStorage.getAll() : recordStorage.getByUser(user.id)
-      setRecords(allRecords)
-      setUsers(userStorage.getAll())
-      setIsLoading(false)
+    let active = true
+    ;(async () => {
+      if (!user) return
+      try {
+        const allRecords = isAdmin ? await recordStorage.getAll() : await recordStorage.getByUser(user.id)
+        if (!active) return
+        setRecords(allRecords)
+        setUsers(userStorage.getAll())
+      } finally {
+        if (!active) return
+        setIsLoading(false)
+      }
+    })()
+    return () => {
+      active = false
     }
   }, [user, isAdmin])
 
