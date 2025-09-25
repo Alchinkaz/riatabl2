@@ -8,21 +8,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { UserForm } from "@/components/admin/user-form"
-import { userStorage, type StoredUser } from "@/lib/user-storage"
+// import { userStorage, type StoredUser } from "@/lib/user-storage"
 import { Plus, Edit, Trash2, Users, Shield, User, Calendar } from "lucide-react"
 import { format } from "date-fns"
 import { ru } from "date-fns/locale"
 
 export default function UsersManagement() {
   const { user: currentUser, isAdmin } = useAuth()
-  const [users, setUsers] = useState<StoredUser[]>([])
-  const [selectedUser, setSelectedUser] = useState<StoredUser | undefined>()
+  const [users, setUsers] = useState<{ id: string; email: string | null; name: string | null; role: string; created_at?: string }[]>([])
+  const [selectedUser, setSelectedUser] = useState<{ id: string; email: string | null; name: string | null; role: string } | undefined>()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  const loadUsers = () => {
-    const allUsers = userStorage.getAll()
-    setUsers(allUsers)
+  const loadUsers = async () => {
+    const res = await fetch("/api/admin/users", { cache: "no-store" })
+    if (res.ok) {
+      const json = await res.json()
+      if (Array.isArray(json.users)) setUsers(json.users)
+    }
     setIsLoading(false)
   }
 
@@ -37,24 +40,24 @@ export default function UsersManagement() {
     setIsFormOpen(true)
   }
 
-  const handleEditUser = (user: StoredUser) => {
+  const handleEditUser = (user: { id: string; email: string | null; name: string | null; role: string }) => {
     setSelectedUser(user)
     setIsFormOpen(true)
   }
 
-  const handleDeleteUser = (user: StoredUser) => {
+  const handleDeleteUser = (user: { id: string; email: string | null }) => {
     if (user.id === currentUser?.id) {
       alert("Вы не можете удалить свой собственный аккаунт")
       return
     }
-
-    if (confirm(`Удалить пользователя "${user.name}"? Это действие нельзя отменить.`)) {
-      try {
-        userStorage.delete(user.id)
-        loadUsers()
-      } catch (error) {
-        alert(error instanceof Error ? error.message : "Ошибка при удалении пользователя")
-      }
+    if (confirm(`Удалить пользователя "${user.email}"? Это действие нельзя отменить.`)) {
+      fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: user.id, email: user.email || undefined }),
+      })
+        .then(() => loadUsers())
+        .catch(() => alert("Ошибка при удалении пользователя"))
     }
   }
 
@@ -104,10 +107,13 @@ export default function UsersManagement() {
             </h1>
             <p className="text-muted-foreground">Создание, редактирование и удаление пользователей системы</p>
           </div>
-          <Button onClick={handleCreateUser}>
-            <Plus className="h-4 w-4 mr-2" />
-            Создать пользователя
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={loadUsers}>Обновить</Button>
+            <Button onClick={handleCreateUser}>
+              <Plus className="h-4 w-4 mr-2" />
+              Создать пользователя
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -190,7 +196,7 @@ export default function UsersManagement() {
                         <TableCell>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Calendar className="h-4 w-4" />
-                            {format(new Date(user.createdAt), "dd.MM.yyyy HH:mm", { locale: ru })}
+                            {user.created_at ? format(new Date(user.created_at), "dd.MM.yyyy HH:mm", { locale: ru }) : "—"}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -204,8 +210,7 @@ export default function UsersManagement() {
                               onClick={() => handleDeleteUser(user)}
                               className="text-red-600 hover:text-red-700"
                               disabled={user.id === currentUser?.id}
-                            >
-                              <Trash2 className="h-4 w-4" />
+                            ><Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
