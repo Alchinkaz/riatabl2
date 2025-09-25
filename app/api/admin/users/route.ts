@@ -1,6 +1,22 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdmin } from "@/lib/supabase-admin"
 
+export const runtime = "nodejs"
+
+export async function GET() {
+  try {
+    const supabase = getSupabaseAdmin()
+    const hasService = !!process.env.SUPABASE_SERVICE_ROLE_KEY
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || null
+    // quick permission probe (read-only)
+    const { error: probeErr } = await supabase.from("profiles").select("id").limit(1)
+    return NextResponse.json({ ok: true, hasServiceRole: hasService, url, probeError: probeErr?.message || null })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unexpected error"
+    return NextResponse.json({ ok: false, message }, { status: 500 })
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { email, password, name, role } = (await request.json()) as {
@@ -65,6 +81,41 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ id: userId, email, role: targetRole }, { status: 201 })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unexpected error"
+    return NextResponse.json({ message }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { id, email } = (await request.json()) as { id?: string; email?: string }
+    if (!id && !email) {
+      return NextResponse.json({ message: "id or email required" }, { status: 400 })
+    }
+
+    const supabase = getSupabaseAdmin()
+
+    // Resolve user id by email if needed
+    let userId = id
+    if (!userId && email) {
+      const { data, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 })
+      if (error) return NextResponse.json({ message: error.message }, { status: 422 })
+      const found = data.users.find((u) => u.email === email)
+      if (!found) return NextResponse.json({ message: "User not found" }, { status: 404 })
+      userId = found.id
+    }
+
+    // Delete auth user (will cascade if you set FK ON DELETE CASCADE; we also clean tables explicitly)
+    const { error: delErr } = await supabase.auth.admin.deleteUser(userId as string)
+    if (delErr) return NextResponse.json({ message: delErr.message }, { status: 422 })
+
+    // Best-effort cleanup (ignore RLS due to service role)
+    await supabase.from("profiles").delete().eq("id", userId as string)
+    await supabase.from("user_settings").delete().eq("user_id", userId as string)
+    await supabase.from("sales_records").delete().eq("created_by", userId as string)
+
+    return NextResponse.json({ ok: true })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error"
     return NextResponse.json({ message }, { status: 500 })
