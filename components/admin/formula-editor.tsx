@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/contexts/auth-context"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Info } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -103,6 +106,8 @@ export function FormulaEditor() {
   const [config, setConfig] = useState<FormulaConfig>(DEFAULT_CONFIG)
   const [customFormulas, setCustomFormulas] = useState<CustomFormulas>(DEFAULT_CUSTOM_FORMULAS)
   const [isSaved, setIsSaved] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
+  const [importText, setImportText] = useState("")
 
   useEffect(() => {
     let active = true
@@ -152,6 +157,37 @@ export function FormulaEditor() {
     }
   }
 
+  const handleExport = () => {
+    const blob = new Blob([
+      JSON.stringify(
+        {
+          formula_config: config,
+          custom_formulas: customFormulas,
+        },
+        null,
+        2
+      ),
+    ], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "formula-settings.json"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImport = async () => {
+    try {
+      const parsed = JSON.parse(importText)
+      if (parsed.formula_config) setConfig(parsed.formula_config)
+      if (parsed.custom_formulas) setCustomFormulas(parsed.custom_formulas)
+      setIsImportOpen(false)
+    } catch (e) {
+      // eslint-disable-next-line no-alert
+      alert("Некорректный JSON. Проверьте формат export файла.")
+    }
+  }
+
   const handleConfigChange = (key: keyof FormulaConfig, value: number) => {
     setConfig((prev) => ({ ...prev, [key]: value }))
   }
@@ -168,9 +204,18 @@ export function FormulaEditor() {
             <Calculator className="h-6 w-6" />
             Настройка формул расчетов
           </h2>
-          <p className="text-muted-foreground">Изменение параметров формул повлияет на все новые расчеты</p>
+          <p className="text-muted-foreground flex items-center gap-2">
+            <Info className="h-4 w-4" />
+            Изменение параметров влияет на новые расчеты. Вы можете экспортировать/импортировать настройки.
+          </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport}>
+            Экспорт JSON
+          </Button>
+          <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+            Импорт JSON
+          </Button>
           <Button variant="outline" onClick={handleReset}>
             <RotateCcw className="h-4 w-4 mr-2" />
             Сбросить
@@ -428,6 +473,24 @@ export function FormulaEditor() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Импорт настроек из JSON</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Вставьте содержимое export файла или JSON с полями {"{ formula_config, custom_formulas }"}.
+            </p>
+            <Textarea rows={10} value={importText} onChange={(e) => setImportText(e.target.value)} />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsImportOpen(false)}>Отмена</Button>
+              <Button onClick={handleImport}>Импортировать</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
