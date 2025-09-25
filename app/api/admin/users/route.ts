@@ -16,13 +16,35 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: true, hasServiceRole: hasService, url, probeError: probeErr?.message || null })
     }
 
-    // Default: list users (profiles) for admin UI
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, email, name, role, created_at")
-      .order("created_at", { ascending: false })
-    if (error) return NextResponse.json({ message: error.message }, { status: 422 })
-    return NextResponse.json({ users: data || [] })
+    // Default: list Authentication → Users, enriched with profiles.role/name
+    const pageSize = 200
+    const { data: list, error: listErr } = await supabase.auth.admin.listUsers({ page: 1, perPage: pageSize })
+    if (listErr) return NextResponse.json({ message: listErr.message }, { status: 422 })
+
+    const users = list?.users || []
+    const ids = users.map((u) => u.id)
+    let rolesById: Record<string, { role: string; name: string | null }> = {}
+    if (ids.length > 0) {
+      const { data: profs, error: profErr } = await supabase
+        .from("profiles")
+        .select("id, role, name")
+        .in("id", ids)
+      if (!profErr && Array.isArray(profs)) {
+        rolesById = Object.fromEntries(
+          profs.map((p: any) => [p.id, { role: p.role || "manager", name: p.name ?? null }])
+        )
+      }
+    }
+
+    const result = users.map((u) => ({
+      id: u.id,
+      email: u.email,
+      name: rolesById[u.id]?.name ?? (u.user_metadata as any)?.name ?? null,
+      role: rolesById[u.id]?.role ?? "manager",
+      created_at: u.created_at,
+    }))
+
+    return NextResponse.json({ users: result })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error"
     return NextResponse.json({ ok: false, message }, { status: 500 })
