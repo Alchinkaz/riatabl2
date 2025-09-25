@@ -14,7 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AdminRecordForm } from "@/components/admin/admin-record-form"
 import { FormulaEditor } from "@/components/admin/formula-editor"
 import { recordStorage, type StoredRecord } from "@/lib/storage"
-import { userStorage } from "@/lib/user-storage"
+// import { userStorage } from "@/lib/user-storage"
+import { supabase } from "@/lib/supabase"
 import { formatCurrency, formatPercent } from "@/lib/calculations"
 import { Plus, Edit, Trash2, Filter, Users, TrendingUp, DollarSign, Target, Calculator } from "lucide-react"
 import { format } from "date-fns"
@@ -35,7 +36,7 @@ export default function AdminDashboard() {
   const [filterMonth, setFilterMonth] = useState("all")
   const [filterDateFrom, setFilterDateFrom] = useState("")
   const [filterDateTo, setFilterDateTo] = useState("")
-  const [users, setUsers] = useState(userStorage.getAll())
+  const [users, setUsers] = useState<{ id: string; email: string; name: string | null; role: string }[]>([])
 
   const loadRecords = async () => {
     const allRecords = await recordStorage.getAll()
@@ -43,9 +44,18 @@ export default function AdminDashboard() {
     setIsLoading(false)
   }
 
+  const loadUsers = async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, email, name, role")
+      .order("created_at", { ascending: false })
+    if (!error) setUsers((data as any[]) || [])
+  }
+
   useEffect(() => {
     if (isAdmin) {
       loadRecords()
+      loadUsers()
     }
   }, [isAdmin])
 
@@ -98,7 +108,7 @@ export default function AdminDashboard() {
   }
 
   const handleFormSuccess = async () => {
-    await loadRecords()
+    await Promise.all([loadRecords(), loadUsers()])
   }
 
   const clearFilters = () => {
