@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { type User, type AuthState, authService } from "@/lib/auth"
+import { useRouter } from "next/navigation"
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     let active = true
@@ -50,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     await authService.logout()
     setUser(null)
+    router.push("/")
   }
 
   const value: AuthContextType = {

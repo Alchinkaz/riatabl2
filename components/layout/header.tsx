@@ -20,6 +20,11 @@ export function Header() {
 
   const isHomePage = pathname === "/"
 
+  const handleLogout = async () => {
+    await logout()
+    router.push("/")
+  }
+
   return (
     <header className="border-b bg-white px-4 py-3">
       <div className="flex items-center justify-between">
@@ -49,7 +54,7 @@ export function Header() {
             <span>{user?.name}</span>
             <span className="text-muted-foreground">({user?.role})</span>
           </div>
-          <Button variant="outline" size="sm" onClick={logout}>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />
             Выйти
           </Button>
