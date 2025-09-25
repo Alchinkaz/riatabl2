@@ -39,17 +39,19 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<{ id: string; email: string; name: string | null; role: string }[]>([])
 
   const loadRecords = async () => {
+    // Admin видит все записи
     const allRecords = await recordStorage.getAll()
     setRecords(allRecords)
     setIsLoading(false)
   }
 
   const loadUsers = async () => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, email, name, role")
-      .order("created_at", { ascending: false })
-    if (!error) setUsers((data as any[]) || [])
+    // Берём список через наш серверный API (service role), чтобы обойти RLS
+    const res = await fetch("/api/admin/users", { cache: "no-store" })
+    if (res.ok) {
+      const json = await res.json()
+      if (Array.isArray(json.users)) setUsers(json.users)
+    }
   }
 
   useEffect(() => {

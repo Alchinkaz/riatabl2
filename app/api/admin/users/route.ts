@@ -3,14 +3,26 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin"
 
 export const runtime = "nodejs"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const mode = searchParams.get("mode")
     const supabase = getSupabaseAdmin()
-    const hasService = !!process.env.SUPABASE_SERVICE_ROLE_KEY
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || null
-    // quick permission probe (read-only)
-    const { error: probeErr } = await supabase.from("profiles").select("id").limit(1)
-    return NextResponse.json({ ok: true, hasServiceRole: hasService, url, probeError: probeErr?.message || null })
+
+    if (mode === "probe") {
+      const hasService = !!process.env.SUPABASE_SERVICE_ROLE_KEY
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL || null
+      const { error: probeErr } = await supabase.from("profiles").select("id").limit(1)
+      return NextResponse.json({ ok: true, hasServiceRole: hasService, url, probeError: probeErr?.message || null })
+    }
+
+    // Default: list users (profiles) for admin UI
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, email, name, role, created_at")
+      .order("created_at", { ascending: false })
+    if (error) return NextResponse.json({ message: error.message }, { status: 422 })
+    return NextResponse.json({ users: data || [] })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error"
     return NextResponse.json({ ok: false, message }, { status: 500 })
