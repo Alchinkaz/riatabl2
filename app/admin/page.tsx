@@ -39,9 +39,16 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<{ id: string; email: string; name: string | null; role: string }[]>([])
 
   const loadRecords = async () => {
-    // Admin видит все записи
-    const allRecords = await recordStorage.getAll()
-    setRecords(allRecords)
+    // Для админа берём все записи через серверный API, чтобы обойти RLS
+    const res = await fetch("/api/admin/records", { cache: "no-store" })
+    if (res.ok) {
+      const json = await res.json()
+      if (Array.isArray(json.records)) setRecords(json.records)
+    } else {
+      // Fallback: клиентский fetch (может упереться в RLS)
+      const allRecords = await recordStorage.getAll()
+      setRecords(allRecords)
+    }
     setIsLoading(false)
   }
 

@@ -20,9 +20,20 @@ export default function AnalyticsPage() {
     ;(async () => {
       if (!user) return
       try {
-        const allRecords = isAdmin ? await recordStorage.getAll() : await recordStorage.getByUser(user.id)
+        let recs
+        if (isAdmin) {
+          const res = await fetch("/api/admin/records", { cache: "no-store" })
+          if (res.ok) {
+            const json = await res.json()
+            recs = Array.isArray(json.records) ? json.records : []
+          } else {
+            recs = await recordStorage.getAll()
+          }
+        } else {
+          recs = await recordStorage.getByUser(user.id)
+        }
         if (!active) return
-        setRecords(allRecords)
+        setRecords(recs)
         setUsers(userStorage.getAll())
       } finally {
         if (!active) return
