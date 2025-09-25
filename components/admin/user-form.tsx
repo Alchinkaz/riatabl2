@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { userStorage, type StoredUser } from "@/lib/user-storage"
+import { supabase } from "@/lib/supabase"
 import { User, Mail, Shield, Key } from "lucide-react"
 
 interface UserFormProps {
@@ -105,9 +106,25 @@ export function UserForm({ open, onOpenChange, user, onSuccess }: UserFormProps)
       }
 
       if (user) {
+        // TODO: optionally implement password update via admin API
         userStorage.update(user.id, userData)
+        // Sync role/name to profiles
+        await fetch("/api/admin/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: user.email, name: userData.name, role: userData.role, password: formData.password || undefined }),
+        })
       } else {
-        userStorage.create({ ...userData, password: formData.password })
+        // Create in Supabase Auth + profiles via server API
+        const res = await fetch("/api/admin/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: userData.email, password: formData.password, name: userData.name, role: userData.role }),
+        })
+        if (!res.ok) {
+          const { message } = await res.json().catch(() => ({ message: "Не удалось создать пользователя" }))
+          throw new Error(message)
+        }
       }
 
       onSuccess()
