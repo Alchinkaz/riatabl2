@@ -76,30 +76,53 @@ const FORMULA_DESCRIPTIONS = {
 }
 
 const DEFAULT_CUSTOM_FORMULAS: CustomFormulas = {
-  delivery_per_unit: "total_delivery / quantity",
-  sum_with_delivery: "purchase_price + delivery_per_unit",
-  financial_load: "sum_with_delivery * (financial_load_percent / 100)",
-  sum_with_load: "sum_with_delivery + financial_load",
-  markup: "selling_price_vat - sum_with_load",
-  markup_percent: "(markup / sum_with_load) * 100",
-  selling_price_no_vat: "selling_price_vat - nds_tax",
-  nds_tax: "selling_price_no_vat * (vat_rate / 100)",
-  manager_bonus_unit: "selling_price_no_vat * (manager_bonus_percent / 100)",
-  income_pre_kpn:
-    "selling_price_vat - purchase_price - delivery_per_unit - financial_load - manager_bonus_unit - nds_tax",
-  kpn_tax: "income_pre_kpn * (kpn_tax_rate / 100)",
-  net_income_unit: "income_pre_kpn - kpn_tax",
-  margin_percent: "(net_income_unit / selling_price_vat) * 100",
-  total_selling_vat: "quantity * selling_price_vat",
-  total_selling_bonus: "quantity * selling_price_with_bonus",
-  total_net_income: "quantity * net_income_unit",
-  total_purchase: "quantity * purchase_price",
-  total_expenses:
-    "total_purchase + total_delivery + (quantity * financial_load) + (quantity * manager_bonus_unit) + (quantity * nds_tax) + (quantity * kpn_tax)",
-  total_manager_bonuses: "quantity * manager_bonus_unit",
-  unit_bonus_client: "total_client_bonus / quantity",
-  total_client_bonus_post_tax: "total_client_bonus / (1 + client_bonus_tax_rate/100)",
+  delivery_per_unit: "F = H / D (Доставка за единицу)",
+  sum_with_delivery: "G = E + F (Сумма за ед. с доставкой)",
+  financial_load: "J = G * (I / 100) (Финансовая нагрузка)",
+  sum_with_load: "K = G + J (Сумма с нагрузкой)",
+  markup: "M = P - K (Накрутка)",
+  markup_percent: "L = (M / K) * 100 (% накрутки)",
+  selling_price_no_vat: "N = P - O (Цена без НДС)",
+  nds_tax: "O = N * (НДС / 100) (НДС)",
+  manager_bonus_unit: "S = N * (R / 100) (Бонус менеджера за ед.)",
+  income_pre_kpn: "T = P - E - F - J - S - O (Доход без КПН)",
+  kpn_tax: "U = T * (КПН / 100) (КПН)",
+  net_income_unit: "V = T - U (Чистый доход за ед.)",
+  margin_percent: "W = (V / P) * 100 (Маржа в %)",
+  total_selling_vat: "X = D * P (Общая сумма с НДС)",
+  total_selling_bonus: "Y = D * Q (Общая сумма с бонусом)",
+  total_net_income: "Z = D * V (Сумма чистого дохода)",
+  total_purchase: "AA = D * E (Общая сумма закупа)",
+  total_expenses: "AB = AA + H + (D * J) + (D * S) + (D * O) + (D * U) (Сумма общих расходов)",
+  total_manager_bonuses: "AC = D * S (Общие бонусы менеджера)",
+  unit_bonus_client: "AD = AE / D (Бонус за единицу)",
+  total_client_bonus_post_tax: "AF = AE / (1 + налог/100) (Бонус клиента с налогом)",
 }
+
+// Отображаемый порядок и подписи (буква + русское название)
+const FORMULA_FIELDS: Array<{ key: keyof CustomFormulas; letter: string; title: string; placeholder: string }> = [
+  { key: "delivery_per_unit", letter: "F", title: "Доставка за единицу", placeholder: "F = H / D (Доставка за единицу)" },
+  { key: "sum_with_delivery", letter: "G", title: "Сумма за ед. с доставкой", placeholder: "G = E + F (Сумма за ед. с доставкой)" },
+  { key: "financial_load", letter: "J", title: "Финансовая нагрузка", placeholder: "J = G * (I / 100) (Финансовая нагрузка)" },
+  { key: "sum_with_load", letter: "K", title: "Сумма с нагрузкой", placeholder: "K = G + J (Сумма с нагрузкой)" },
+  { key: "markup", letter: "M", title: "Накрутка", placeholder: "M = P - K (Накрутка)" },
+  { key: "markup_percent", letter: "L", title: "% накрутки", placeholder: "L = (M / K) * 100 (% накрутки)" },
+  { key: "selling_price_no_vat", letter: "N", title: "Цена без НДС", placeholder: "N = P - O (Цена без НДС)" },
+  { key: "nds_tax", letter: "O", title: "НДС", placeholder: "O = N * (НДС / 100) (НДС)" },
+  { key: "manager_bonus_unit", letter: "S", title: "Бонус менеджера за ед.", placeholder: "S = N * (R / 100) (Бонус менеджера за ед.)" },
+  { key: "income_pre_kpn", letter: "T", title: "Доход без КПН", placeholder: "T = P - E - F - J - S - O (Доход без КПН)" },
+  { key: "kpn_tax", letter: "U", title: "КПН", placeholder: "U = T * (КПН / 100) (КПН)" },
+  { key: "net_income_unit", letter: "V", title: "Чистый доход за ед.", placeholder: "V = T - U (Чистый доход за ед.)" },
+  { key: "margin_percent", letter: "W", title: "Маржа в %", placeholder: "W = (V / P) * 100 (Маржа в %)" },
+  { key: "total_selling_vat", letter: "X", title: "Общая сумма с НДС", placeholder: "X = D * P (Общая сумма с НДС)" },
+  { key: "total_selling_bonus", letter: "Y", title: "Общая сумма с бонусом", placeholder: "Y = D * Q (Общая сумма с бонусом)" },
+  { key: "total_net_income", letter: "Z", title: "Сумма чистого дохода", placeholder: "Z = D * V (Сумма чистого дохода)" },
+  { key: "total_purchase", letter: "AA", title: "Общая сумма закупа", placeholder: "AA = D * E (Общая сумма закупа)" },
+  { key: "total_expenses", letter: "AB", title: "Сумма общих расходов", placeholder: "AB = AA + H + (D * J) + (D * S) + (D * O) + (D * U) (Сумма общих расходов)" },
+  { key: "total_manager_bonuses", letter: "AC", title: "Общие бонусы менеджера", placeholder: "AC = D * S (Общие бонусы менеджера)" },
+  { key: "unit_bonus_client", letter: "AD", title: "Бонус за единицу", placeholder: "AD = AE / D (Бонус за единицу)" },
+  { key: "total_client_bonus_post_tax", letter: "AF", title: "Бонус клиента с налогом", placeholder: "AF = AE / (1 + налог/100) (Бонус клиента с налогом)" },
+]
 
 export function FormulaEditor() {
   const { user } = useAuth()
@@ -319,29 +342,28 @@ export function FormulaEditor() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Edit3 className="h-5 w-5" />
-                Редактор пользовательских формул
+                Редактор пользовательских формул (формат: БУКВА = выражение)
               </CardTitle>
               <CardDescription>
-                Измените формулы расчетов для каждого столбца. Используйте названия переменных на английском языке.
+                Редактируйте прямо в виде «M = P - K». Значения сохраняются как есть.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4">
-                {Object.entries(customFormulas).map(([key, formula]) => (
-                  <div key={key} className="space-y-2">
-                    <Label htmlFor={key} className="text-sm font-medium">
-                      {key.replace(/_/g, " ").toUpperCase()}
+              <div className="grid gap-4 md:grid-cols-2">
+                {FORMULA_FIELDS.map(({ key, letter, title, placeholder }) => (
+                  <div key={key as string} className="space-y-2">
+                    <Label htmlFor={key as string} className="text-sm font-medium">
+                      {letter} — {title}
                     </Label>
-                    <Textarea
-                      id={key}
-                      value={formula}
-                      onChange={(e) => handleFormulaChange(key, e.target.value)}
-                      placeholder="Введите формулу..."
+                    <Input
+                      id={key as string}
+                      value={customFormulas[key] || ""}
+                      onChange={(e) => handleFormulaChange(key as string, e.target.value)}
+                      placeholder={placeholder}
                       className="font-mono text-sm"
-                      rows={2}
                     />
                     <p className="text-xs text-muted-foreground">
-                      {FORMULA_DESCRIPTIONS[key] || "Пользовательская формула"}
+                      {FORMULA_DESCRIPTIONS[key as keyof typeof FORMULA_DESCRIPTIONS] || "Пользовательская формула"}
                     </p>
                   </div>
                 ))}
