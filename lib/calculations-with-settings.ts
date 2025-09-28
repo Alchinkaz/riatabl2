@@ -23,7 +23,8 @@ export function calculateSalesRecordWithSettings(
   config: FormulaConfig,
   customFormulas: CustomFormulas
 ): Omit<SalesRecord, "date" | "counterparty" | "name" | "id" | "created_by" | "created_at" | "updated_at"> {
-  console.log('calculateSalesRecordWithSettings called with:', { input, config, customFormulas })
+  console.log('calculateSalesRecordWithSettings: Input:', input)
+  console.log('calculateSalesRecordWithSettings: Config:', config)
   const { quantity: D, purchase_price: E, total_delivery: H, selling_with_bonus: Q, client_bonus: AE } = input
 
   // Handle edge cases

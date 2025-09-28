@@ -67,9 +67,16 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
   }, [record, open])
 
   useEffect(() => {
+    console.log('RecordForm: useEffect triggered with dependencies:', { 
+      formData: formData.quantity, 
+      config: config.vat_rate, 
+      customFormulas: Object.keys(customFormulas).length,
+      settingsLoading 
+    })
+    
     const debounceTimer = setTimeout(() => {
       if (formData.quantity > 0 && !settingsLoading) {
-        console.log('RecordForm: Using settings:', { config, customFormulas })
+        console.log('RecordForm: Recalculating with settings:', { config, customFormulas })
         const calc = calculateSalesRecordWithSettings({
           quantity: formData.quantity,
           purchase_price: formData.purchase_price,
@@ -77,8 +84,8 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
           selling_with_bonus: formData.selling_with_bonus,
           client_bonus: formData.client_bonus,
         }, config, customFormulas)
-        console.log('RecordForm: Calculated result:', calc)
-        setCalculations(calc)
+        console.log('RecordForm: Calculation result:', calc)
+        setCalculations(calc as SalesRecord)
       }
     }, 300)
 
@@ -112,15 +119,10 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
     setIsSubmitting(true)
     try {
       const recordData = {
+        ...calculations,
         date: formData.date,
         counterparty: formData.counterparty,
         name: formData.name,
-        quantity: formData.quantity,
-        purchase_price: formData.purchase_price,
-        total_delivery: formData.total_delivery,
-        selling_with_bonus: formData.selling_with_bonus,
-        client_bonus: formData.client_bonus,
-        ...calculations,
         created_by: user.id,
       }
 

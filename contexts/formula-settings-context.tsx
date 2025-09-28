@@ -143,6 +143,7 @@ export function FormulaSettingsProvider({ children }: { children: React.ReactNod
   }, [user])
 
   const updateConfig = (newConfig: FormulaConfig) => {
+    console.log('FormulaSettings: updateConfig called with:', newConfig)
     setConfig(newConfig)
     if (user) {
       setCachedSettings(user.id, newConfig, customFormulas)
@@ -150,6 +151,7 @@ export function FormulaSettingsProvider({ children }: { children: React.ReactNod
   }
 
   const updateCustomFormulas = (newFormulas: CustomFormulas) => {
+    console.log('FormulaSettings: updateCustomFormulas called with:', newFormulas)
     setCustomFormulas(newFormulas)
     if (user) {
       setCachedSettings(user.id, config, newFormulas)
@@ -167,6 +169,7 @@ export function FormulaSettingsProvider({ children }: { children: React.ReactNod
       }
       const { error } = await supabase.from("user_settings").upsert(payload, { onConflict: "user_id" })
       if (!error) {
+        console.log('FormulaSettings: Settings saved successfully:', { newConfig, newFormulas })
         setConfig(newConfig)
         setCustomFormulas(newFormulas)
         setCachedSettings(user.id, newConfig, newFormulas)

@@ -25,6 +25,17 @@ export function DebugFormulaSettings() {
     console.log('Save result:', success)
   }
 
+  const testForceUpdate = () => {
+    // Принудительно обновляем настройки
+    const newConfig = {
+      ...config,
+      vat_rate: config.vat_rate === 12 ? 15 : 12,
+      financial_load_percent: config.financial_load_percent === 5 ? 7 : 5,
+    }
+    updateConfig(newConfig)
+    console.log('Force update config:', newConfig)
+  }
+
   return (
     <div className="p-4 border rounded-lg bg-gray-100">
       <h3 className="font-bold mb-2">Debug Formula Settings</h3>
@@ -39,6 +50,9 @@ export function DebugFormulaSettings() {
           </Button>
           <Button onClick={testSaveSettings} size="sm">
             Test Save Settings
+          </Button>
+          <Button onClick={testForceUpdate} size="sm" variant="outline">
+            Force Update
           </Button>
         </div>
       </div>
