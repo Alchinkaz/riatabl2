@@ -128,6 +128,31 @@ export function useFormulaSettings() {
     }
   }
 
+  const saveSettings = async (newConfig: FormulaConfig, newFormulas: CustomFormulas) => {
+    if (!user) return
+    
+    try {
+      const payload = {
+        user_id: user.id,
+        formula_config: newConfig,
+        custom_formulas: newFormulas,
+      }
+      const { error } = await supabase.from("user_settings").upsert(payload, { onConflict: "user_id" })
+      if (!error) {
+        setConfig(newConfig)
+        setCustomFormulas(newFormulas)
+        setCachedSettings(user.id, newConfig, newFormulas)
+        return true
+      } else {
+        console.error("save settings error", error)
+        return false
+      }
+    } catch (error) {
+      console.error("Error saving settings:", error)
+      return false
+    }
+  }
+
   const resetToDefaults = () => {
     setConfig(DEFAULT_CONFIG)
     setCustomFormulas(DEFAULT_CUSTOM_FORMULAS)
@@ -149,6 +174,7 @@ export function useFormulaSettings() {
     error,
     updateConfig,
     updateCustomFormulas,
+    saveSettings,
     resetToDefaults,
     clearSettingsCache,
   }

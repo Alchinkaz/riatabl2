@@ -126,58 +126,40 @@ const FORMULA_FIELDS: Array<{ key: keyof CustomFormulas; letter: string; title: 
 
 export function FormulaEditor() {
   const { user } = useAuth()
-  const [config, setConfig] = useState<FormulaConfig>(DEFAULT_CONFIG)
-  const [customFormulas, setCustomFormulas] = useState<CustomFormulas>(DEFAULT_CUSTOM_FORMULAS)
+  const { 
+    config, 
+    customFormulas, 
+    saveSettings, 
+    updateConfig, 
+    updateCustomFormulas 
+  } = useFormulaSettings()
   const [isSaved, setIsSaved] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [importText, setImportText] = useState("")
 
-  useEffect(() => {
-    let active = true
-    ;(async () => {
-      if (!user) return
-      const { data, error } = await supabase
-        .from("user_settings")
-        .select("formula_config, custom_formulas")
-        .eq("user_id", user.id)
-        .maybeSingle()
-      if (!active) return
-      if (!error && data) {
-        if (data.formula_config) setConfig(data.formula_config as FormulaConfig)
-        if (data.custom_formulas) setCustomFormulas(data.custom_formulas as CustomFormulas)
-      }
-    })()
-    return () => {
-      active = false
-    }
-  }, [user])
 
   const handleSave = async () => {
-    if (!user) return
-    const payload = {
-      user_id: user.id,
-      formula_config: config,
-      custom_formulas: customFormulas,
-    }
-    const { error } = await supabase.from("user_settings").upsert(payload, { onConflict: "user_id" })
-    if (!error) {
+    setIsSaving(true)
+    const success = await saveSettings(config, customFormulas)
+    if (success) {
       setIsSaved(true)
       setTimeout(() => setIsSaved(false), 2000)
-    } else {
-      // eslint-disable-next-line no-console
-      console.error("save settings error", error)
     }
+    setIsSaving(false)
   }
 
   const handleReset = async () => {
-    setConfig(DEFAULT_CONFIG)
-    setCustomFormulas(DEFAULT_CUSTOM_FORMULAS)
-    if (user) {
-      await supabase
-        .from("user_settings")
-        .update({ formula_config: DEFAULT_CONFIG, custom_formulas: DEFAULT_CUSTOM_FORMULAS })
-        .eq("user_id", user.id)
+    updateConfig(DEFAULT_CONFIG)
+    updateCustomFormulas(DEFAULT_CUSTOM_FORMULAS)
+    
+    setIsSaving(true)
+    const success = await saveSettings(DEFAULT_CONFIG, DEFAULT_CUSTOM_FORMULAS)
+    if (success) {
+      setIsSaved(true)
+      setTimeout(() => setIsSaved(false), 2000)
     }
+    setIsSaving(false)
   }
 
   const handleExport = () => {
@@ -202,8 +184,20 @@ export function FormulaEditor() {
   const handleImport = async () => {
     try {
       const parsed = JSON.parse(importText)
-      if (parsed.formula_config) setConfig(parsed.formula_config)
-      if (parsed.custom_formulas) setCustomFormulas(parsed.custom_formulas)
+      if (parsed.formula_config) updateConfig(parsed.formula_config)
+      if (parsed.custom_formulas) updateCustomFormulas(parsed.custom_formulas)
+      
+      // Сохраняем импортированные настройки
+      setIsSaving(true)
+      const success = await saveSettings(
+        parsed.formula_config || config, 
+        parsed.custom_formulas || customFormulas
+      )
+      if (success) {
+        setIsSaved(true)
+        setTimeout(() => setIsSaved(false), 2000)
+      }
+      setIsSaving(false)
       setIsImportOpen(false)
     } catch (e) {
       // eslint-disable-next-line no-alert
@@ -211,18 +205,48 @@ export function FormulaEditor() {
     }
   }
 
-  const handleExcelImport = (newConfig: FormulaConfig, newFormulas: CustomFormulas) => {
-    setConfig(newConfig)
-    setCustomFormulas(newFormulas)
+  const handleExcelImport = async (newConfig: FormulaConfig, newFormulas: CustomFormulas) => {
+    updateConfig(newConfig)
+    updateCustomFormulas(newFormulas)
+    
+    // Сохраняем импортированные настройки
+    setIsSaving(true)
+    const success = await saveSettings(newConfig, newFormulas)
+    if (success) {
+      setIsSaved(true)
+      setTimeout(() => setIsSaved(false), 2000)
+    }
+    setIsSaving(false)
   }
 
-  const handleConfigChange = (key: keyof FormulaConfig, value: number) => {
-    setConfig((prev) => ({ ...prev, [key]: value }))
+  const handleConfigChange = async (key: keyof FormulaConfig, value: number) => {
+    const newConfig = { ...config, [key]: value }
+    updateConfig(newConfig)
+    
+    // Автоматическое сохранение при изменении конфигурации
+    setIsSaving(true)
+    const success = await saveSettings(newConfig, customFormulas)
+    if (success) {
+      setIsSaved(true)
+      setTimeout(() => setIsSaved(false), 2000)
+    }
+    setIsSaving(false)
   }
 
-  const handleFormulaChange = (key: string, value: string) => {
-    setCustomFormulas((prev) => ({ ...prev, [key]: value }))
+  const handleFormulaChange = async (key: string, value: string) => {
+    const newFormulas = { ...customFormulas, [key]: value }
+    updateCustomFormulas(newFormulas)
+    
+    // Автоматическое сохранение при изменении формул
+    setIsSaving(true)
+    const success = await saveSettings(config, newFormulas)
+    if (success) {
+      setIsSaved(true)
+      setTimeout(() => setIsSaved(false), 2000)
+    }
+    setIsSaving(false)
   }
+
 
   return (
     <div className="space-y-6">
@@ -235,6 +259,7 @@ export function FormulaEditor() {
           <p className="text-muted-foreground flex items-center gap-2">
             <Info className="h-4 w-4" />
             Изменение параметров влияет на новые расчеты. Вы можете экспортировать/импортировать настройки.
+            {isSaving && <span className="text-blue-600">• Автосохранение...</span>}
           </p>
         </div>
         <div className="flex gap-2">
@@ -248,9 +273,9 @@ export function FormulaEditor() {
             <RotateCcw className="h-4 w-4 mr-2" />
             Сбросить
           </Button>
-          <Button onClick={handleSave} className={isSaved ? "bg-green-600" : ""}>
+          <Button onClick={handleSave} className={isSaved ? "bg-green-600" : ""} disabled={isSaving}>
             <Save className="h-4 w-4 mr-2" />
-            {isSaved ? "Сохранено!" : "Сохранить"}
+            {isSaving ? "Сохранение..." : isSaved ? "Сохранено!" : "Сохранить"}
           </Button>
         </div>
       </div>
