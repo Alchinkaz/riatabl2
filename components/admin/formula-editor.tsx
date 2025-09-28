@@ -340,27 +340,34 @@ export function FormulaEditor() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Edit3 className="h-5 w-5" />
-                Редактор пользовательских формул (формат: БУКВА = выражение)
+                Редактор формул в стиле Excel
               </CardTitle>
               <CardDescription>
-                Редактируйте прямо в виде «M = P - K». Значения сохраняются как есть.
+                Редактируйте формулы в удобном формате: F = H / D (как в Excel). Каждая формула в отдельной строке.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-1">
                 {FORMULA_FIELDS.map(({ key, letter, title, placeholder }) => (
-                  <div key={key as string} className="space-y-2">
-                    <Label htmlFor={key as string} className="text-sm font-medium">
-                      {letter} — {title}
-                    </Label>
-                    <Input
-                      id={key as string}
-                      value={customFormulas[key] || ""}
-                      onChange={(e) => handleFormulaChange(key as string, e.target.value)}
-                      placeholder={placeholder}
-                      className="font-mono text-sm"
-                    />
-                    <p className="text-xs text-muted-foreground">
+                  <div key={key as string} className="space-y-2 p-4 border rounded-lg bg-muted/20">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
+                        {letter}
+                      </div>
+                      <div className="flex-1">
+                        <Label htmlFor={key as string} className="text-sm font-medium">
+                          {title}
+                        </Label>
+                        <Input
+                          id={key as string}
+                          value={customFormulas[key] || ""}
+                          onChange={(e) => handleFormulaChange(key as string, e.target.value)}
+                          placeholder={placeholder}
+                          className="font-mono text-sm mt-1"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground ml-11">
                       {FORMULA_DESCRIPTIONS[key as keyof typeof FORMULA_DESCRIPTIONS] || "Пользовательская формула"}
                     </p>
                   </div>
