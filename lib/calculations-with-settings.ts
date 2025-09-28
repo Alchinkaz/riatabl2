@@ -80,8 +80,8 @@ export function calculateSalesRecordWithSettings(
   // AD = AE / D (Бонус за ед)
   const AD = AE / D
 
-  // P = Q - AD (Цена продажи с НДС)
-  const P = Q - AD
+  // P = Q (Цена продажи с НДС = Цена продажи с бонусом клиента)
+  const P = Q
 
   // M = P - K (Накрутка)
   const M = P - K
@@ -89,17 +89,22 @@ export function calculateSalesRecordWithSettings(
   // L = (M / K) * 100 (% накрутки)
   const L = K !== 0 ? (M / K) * 100 : 0
 
-  // Iterative calculation for N and O using user's VAT rate
-  let N = P // Initial guess for selling price without VAT
-  let O = 0 // VAT tax
-
-  // Iterate to solve N = P - O and O = N * (vat_rate / 100)
-  for (let i = 0; i < 10; i++) {
-    O = N * (config.vat_rate / 100)
-    const newN = P - O
-    if (Math.abs(newN - N) < 0.01) break
-    N = newN
-  }
+  // Calculate VAT from price with VAT (P)
+  // O = P * (vat_rate / (100 + vat_rate)) - НДС от цены с НДС
+  const O = P * (config.vat_rate / (100 + config.vat_rate))
+  
+  // N = P - O (Цена продажи без НДС)
+  const N = P - O
+  
+  console.log('VAT Calculation:', {
+    priceWithBonus: Q,
+    clientBonusPerUnit: AD,
+    priceWithVAT: P,
+    vatRate: config.vat_rate,
+    vatAmount: O,
+    priceWithoutVAT: N,
+    vatPercentage: (O / P) * 100
+  })
 
   // R = manager_bonus_percent (% менеджера)
   const R = config.manager_bonus_percent
