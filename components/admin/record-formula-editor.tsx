@@ -189,7 +189,7 @@ export function RecordFormulaEditor() {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="formulas">Формулы записей</TabsTrigger>
           <TabsTrigger value="test">Тестирование</TabsTrigger>
-          <TabsTrigger value="reference">Справочник</TabsTrigger>
+          <TabsTrigger value="reference">Редактор справочника</TabsTrigger>
         </TabsList>
 
         <TabsContent value="formulas" className="space-y-4">
@@ -285,40 +285,43 @@ export function RecordFormulaEditor() {
         <TabsContent value="reference" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Переменные в формулах</CardTitle>
-              <CardDescription>Обозначения переменных, используемых в формулах записей</CardDescription>
+              <CardTitle>Редактор формул в стиле справочника</CardTitle>
+              <CardDescription>Редактируйте формулы прямо в справочнике. Каждая формула в отдельной карточке.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-2 md:grid-cols-3 text-sm">
-                <div><strong>D</strong> - Количество (quantity)</div>
-                <div><strong>E</strong> - Закуп в тенге (purchase_price)</div>
-                <div><strong>F</strong> - Доставка за единицу (delivery_per_unit)</div>
-                <div><strong>G</strong> - Сумма за ед. с доставкой (sum_with_delivery)</div>
-                <div><strong>H</strong> - Общая доставка (total_delivery)</div>
-                <div><strong>I</strong> - Финансовая нагрузка % (financial_load_percent)</div>
-                <div><strong>J</strong> - Финансовая нагрузка (financial_load)</div>
-                <div><strong>K</strong> - Сумма с нагрузкой (sum_with_load)</div>
-                <div><strong>L</strong> - % накрутки (markup_percent)</div>
-                <div><strong>M</strong> - Накрутка (markup)</div>
-                <div><strong>N</strong> - Цена без НДС (selling_price_no_vat)</div>
-                <div><strong>O</strong> - НДС налог (nds_tax)</div>
-                <div><strong>P</strong> - Цена с НДС (selling_price_vat)</div>
-                <div><strong>Q</strong> - Цена с бонусом (selling_price_with_bonus)</div>
-                <div><strong>R</strong> - % менеджера (manager_bonus_percent)</div>
-                <div><strong>S</strong> - Бонус менеджера (manager_bonus_unit)</div>
-                <div><strong>T</strong> - Доход без КПН (income_pre_kpn)</div>
-                <div><strong>U</strong> - КПН налог (kpn_tax)</div>
-                <div><strong>V</strong> - Чистый доход за ед. (net_income_unit)</div>
-                <div><strong>W</strong> - Маржа в % (margin_percent)</div>
-                <div><strong>X</strong> - Общая сумма с НДС (total_selling_vat)</div>
-                <div><strong>Y</strong> - Общая сумма с бонусом (total_selling_bonus)</div>
-                <div><strong>Z</strong> - Сумма чистого дохода (total_net_income)</div>
-                <div><strong>AA</strong> - Общая сумма закупа (total_purchase)</div>
-                <div><strong>AB</strong> - Сумма общих расходов (total_expenses)</div>
-                <div><strong>AC</strong> - Общие бонусы менеджера (total_manager_bonuses)</div>
-                <div><strong>AD</strong> - Бонус за единицу (unit_bonus_client)</div>
-                <div><strong>AE</strong> - Бонус клиента (total_client_bonus)</div>
-                <div><strong>AF</strong> - Бонус клиента с налогом (total_client_bonus_post_tax)</div>
+              <div className="grid gap-4 md:grid-cols-1">
+                {RECORD_FORMULA_FIELDS.map(({ key, letter, title, description }) => (
+                  <div key={key} className="p-4 border rounded-lg bg-muted/20">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
+                        {letter}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="outline" className="text-xs">
+                            {key.replace(/_/g, " ").toUpperCase()}
+                          </Badge>
+                        </div>
+                        <h3 className="font-medium">{title}</h3>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`ref-${key}`} className="text-sm font-medium">
+                        Формула:
+                      </Label>
+                      <Input
+                        id={`ref-${key}`}
+                        value={formulas[key] || ""}
+                        onChange={(e) => handleFormulaChange(key, e.target.value)}
+                        placeholder={description}
+                        className="font-mono text-sm"
+                      />
+                      <div className="text-xs text-muted-foreground">
+                        <strong>Описание:</strong> {description}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
