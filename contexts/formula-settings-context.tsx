@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { createContext, useContext, useEffect, useState } from "react"
+import { useAuth } from "./auth-context"
 import { supabase } from "@/lib/supabase"
-import { useAuth } from "@/contexts/auth-context"
 import { getCachedSettings, setCachedSettings, clearCache } from "@/lib/formula-settings-cache"
 
 interface FormulaConfig {
@@ -49,7 +49,21 @@ const DEFAULT_CUSTOM_FORMULAS: CustomFormulas = {
   total_client_bonus_post_tax: "AF = AE / (1 + налог/100)",
 }
 
-export function useFormulaSettings() {
+interface FormulaSettingsContextType {
+  config: FormulaConfig
+  customFormulas: CustomFormulas
+  isLoading: boolean
+  error: string | null
+  updateConfig: (newConfig: FormulaConfig) => void
+  updateCustomFormulas: (newFormulas: CustomFormulas) => void
+  saveSettings: (newConfig: FormulaConfig, newFormulas: CustomFormulas) => Promise<boolean>
+  resetToDefaults: () => void
+  clearSettingsCache: () => void
+}
+
+const FormulaSettingsContext = createContext<FormulaSettingsContextType | undefined>(undefined)
+
+export function FormulaSettingsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
   const [config, setConfig] = useState<FormulaConfig>(DEFAULT_CONFIG)
   const [customFormulas, setCustomFormulas] = useState<CustomFormulas>(DEFAULT_CUSTOM_FORMULAS)
@@ -129,7 +143,7 @@ export function useFormulaSettings() {
   }
 
   const saveSettings = async (newConfig: FormulaConfig, newFormulas: CustomFormulas) => {
-    if (!user) return
+    if (!user) return false
     
     try {
       const payload = {
@@ -167,15 +181,29 @@ export function useFormulaSettings() {
     }
   }
 
-  return {
-    config,
-    customFormulas,
-    isLoading,
-    error,
-    updateConfig,
-    updateCustomFormulas,
-    saveSettings,
-    resetToDefaults,
-    clearSettingsCache,
+  return (
+    <FormulaSettingsContext.Provider
+      value={{
+        config,
+        customFormulas,
+        isLoading,
+        error,
+        updateConfig,
+        updateCustomFormulas,
+        saveSettings,
+        resetToDefaults,
+        clearSettingsCache,
+      }}
+    >
+      {children}
+    </FormulaSettingsContext.Provider>
+  )
+}
+
+export function useFormulaSettings() {
+  const context = useContext(FormulaSettingsContext)
+  if (context === undefined) {
+    throw new Error("useFormulaSettings must be used within a FormulaSettingsProvider")
   }
+  return context
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/contexts/auth-context"
+import { useFormulaSettings } from "@/contexts/formula-settings-context"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -126,40 +127,26 @@ const FORMULA_FIELDS: Array<{ key: keyof CustomFormulas; letter: string; title: 
 
 export function FormulaEditor() {
   const { user } = useAuth()
-  const { 
-    config, 
-    customFormulas, 
-    saveSettings, 
-    updateConfig, 
-    updateCustomFormulas 
-  } = useFormulaSettings()
+  const { config, customFormulas, saveSettings, updateConfig, updateCustomFormulas } = useFormulaSettings()
   const [isSaved, setIsSaved] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [importText, setImportText] = useState("")
 
 
   const handleSave = async () => {
-    setIsSaving(true)
     const success = await saveSettings(config, customFormulas)
     if (success) {
       setIsSaved(true)
       setTimeout(() => setIsSaved(false), 2000)
     }
-    setIsSaving(false)
   }
 
   const handleReset = async () => {
-    updateConfig(DEFAULT_CONFIG)
-    updateCustomFormulas(DEFAULT_CUSTOM_FORMULAS)
-    
-    setIsSaving(true)
     const success = await saveSettings(DEFAULT_CONFIG, DEFAULT_CUSTOM_FORMULAS)
     if (success) {
       setIsSaved(true)
       setTimeout(() => setIsSaved(false), 2000)
     }
-    setIsSaving(false)
   }
 
   const handleExport = () => {
@@ -186,18 +173,6 @@ export function FormulaEditor() {
       const parsed = JSON.parse(importText)
       if (parsed.formula_config) updateConfig(parsed.formula_config)
       if (parsed.custom_formulas) updateCustomFormulas(parsed.custom_formulas)
-      
-      // Сохраняем импортированные настройки
-      setIsSaving(true)
-      const success = await saveSettings(
-        parsed.formula_config || config, 
-        parsed.custom_formulas || customFormulas
-      )
-      if (success) {
-        setIsSaved(true)
-        setTimeout(() => setIsSaved(false), 2000)
-      }
-      setIsSaving(false)
       setIsImportOpen(false)
     } catch (e) {
       // eslint-disable-next-line no-alert
@@ -205,48 +180,18 @@ export function FormulaEditor() {
     }
   }
 
-  const handleExcelImport = async (newConfig: FormulaConfig, newFormulas: CustomFormulas) => {
+  const handleExcelImport = (newConfig: FormulaConfig, newFormulas: CustomFormulas) => {
     updateConfig(newConfig)
     updateCustomFormulas(newFormulas)
-    
-    // Сохраняем импортированные настройки
-    setIsSaving(true)
-    const success = await saveSettings(newConfig, newFormulas)
-    if (success) {
-      setIsSaved(true)
-      setTimeout(() => setIsSaved(false), 2000)
-    }
-    setIsSaving(false)
   }
 
-  const handleConfigChange = async (key: keyof FormulaConfig, value: number) => {
-    const newConfig = { ...config, [key]: value }
-    updateConfig(newConfig)
-    
-    // Автоматическое сохранение при изменении конфигурации
-    setIsSaving(true)
-    const success = await saveSettings(newConfig, customFormulas)
-    if (success) {
-      setIsSaved(true)
-      setTimeout(() => setIsSaved(false), 2000)
-    }
-    setIsSaving(false)
+  const handleConfigChange = (key: keyof FormulaConfig, value: number) => {
+    updateConfig({ ...config, [key]: value })
   }
 
-  const handleFormulaChange = async (key: string, value: string) => {
-    const newFormulas = { ...customFormulas, [key]: value }
-    updateCustomFormulas(newFormulas)
-    
-    // Автоматическое сохранение при изменении формул
-    setIsSaving(true)
-    const success = await saveSettings(config, newFormulas)
-    if (success) {
-      setIsSaved(true)
-      setTimeout(() => setIsSaved(false), 2000)
-    }
-    setIsSaving(false)
+  const handleFormulaChange = (key: string, value: string) => {
+    updateCustomFormulas({ ...customFormulas, [key]: value })
   }
-
 
   return (
     <div className="space-y-6">
@@ -259,7 +204,6 @@ export function FormulaEditor() {
           <p className="text-muted-foreground flex items-center gap-2">
             <Info className="h-4 w-4" />
             Изменение параметров влияет на новые расчеты. Вы можете экспортировать/импортировать настройки.
-            {isSaving && <span className="text-blue-600">• Автосохранение...</span>}
           </p>
         </div>
         <div className="flex gap-2">
@@ -273,9 +217,9 @@ export function FormulaEditor() {
             <RotateCcw className="h-4 w-4 mr-2" />
             Сбросить
           </Button>
-          <Button onClick={handleSave} className={isSaved ? "bg-green-600" : ""} disabled={isSaving}>
+          <Button onClick={handleSave} className={isSaved ? "bg-green-600" : ""}>
             <Save className="h-4 w-4 mr-2" />
-            {isSaving ? "Сохранение..." : isSaved ? "Сохранено!" : "Сохранить"}
+            {isSaved ? "Сохранено!" : "Сохранить"}
           </Button>
         </div>
       </div>

@@ -138,7 +138,7 @@ export function calculateSalesRecordWithSettings(
   // AF = AE / (1 + client_bonus_tax_rate / 100) (Общий бонус клиент с вычетом налога)
   const AF = AE / (1 + config.client_bonus_tax_rate / 100)
 
-  const baseResult = {
+  return {
     quantity: D,
     purchase_price: E,
     total_delivery: H,
@@ -169,184 +169,32 @@ export function calculateSalesRecordWithSettings(
     unit_bonus_client: AD,
     total_client_bonus_post_tax: AF,
   }
-
-  // Применяем пользовательские формулы если они есть
-  const resultWithCustomFormulas = applyCustomFormulas(baseResult, customFormulas, config)
-  
-  return resultWithCustomFormulas
 }
 
-// Функция для парсинга пользовательских формул
+// Функция для парсинга пользовательских формул (базовая реализация)
 export function parseCustomFormula(formula: string, variables: Record<string, number>): number {
   try {
-    if (!formula || formula.trim() === '') return 0
-    
-    // Удаляем "=" в начале если есть
-    let expression = formula.replace(/^=/, '').trim()
-    
     // Заменяем переменные на их значения
+    let expression = formula
     Object.entries(variables).forEach(([key, value]) => {
       const regex = new RegExp(`\\b${key}\\b`, 'g')
       expression = expression.replace(regex, value.toString())
     })
 
-    // Заменяем математические операторы
+    // Заменяем математические операторы на JavaScript эквиваленты
     expression = expression
       .replace(/\^/g, '**') // степень
-      .replace(/\b(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\b/g, '($1 / $2)') // деление
-      .replace(/\b(\d+(?:\.\d+)?)\s*\*\s*(\d+(?:\.\d+)?)\b/g, '($1 * $2)') // умножение
+      .replace(/\b(\d+)\s*\/\s*(\d+)\b/g, '($1 / $2)') // деление
+      .replace(/\b(\d+)\s*\*\s*(\d+)\b/g, '($1 * $2)') // умножение
+
+    // Удаляем "=" и пробелы
+    expression = expression.replace(/^=/, '').trim()
 
     // Безопасное вычисление выражения
+    // В реальном приложении здесь должна быть более сложная логика парсинга
     return eval(expression) || 0
   } catch (error) {
     console.error('Error parsing custom formula:', formula, error)
     return 0
   }
-}
-
-// Функция для применения пользовательских формул к расчетам
-export function applyCustomFormulas(
-  baseCalculations: Record<string, number>,
-  customFormulas: CustomFormulas,
-  config: FormulaConfig
-): Record<string, number> {
-  const result = { ...baseCalculations }
-  
-  // Создаем объект с переменными для формул
-  const variables = {
-    D: result.quantity || 0,
-    E: result.purchase_price || 0,
-    F: result.delivery_per_unit || 0,
-    G: result.sum_with_delivery || 0,
-    H: result.total_delivery || 0,
-    I: result.financial_load_percent || 0,
-    J: result.financial_load || 0,
-    K: result.sum_with_load || 0,
-    L: result.markup_percent || 0,
-    M: result.markup || 0,
-    N: result.selling_price_no_vat || 0,
-    O: result.nds_tax || 0,
-    P: result.selling_price_vat || 0,
-    Q: result.selling_with_bonus || 0,
-    R: result.manager_bonus_percent || 0,
-    S: result.manager_bonus_unit || 0,
-    T: result.income_pre_kpn || 0,
-    U: result.kpn_tax || 0,
-    V: result.net_income_unit || 0,
-    W: result.margin_percent || 0,
-    X: result.total_selling_vat || 0,
-    Y: result.total_selling_bonus || 0,
-    Z: result.total_net_income || 0,
-    AA: result.total_purchase || 0,
-    AB: result.total_expenses || 0,
-    AC: result.total_manager_bonuses || 0,
-    AD: result.unit_bonus_client || 0,
-    AE: result.client_bonus || 0,
-    AF: result.total_client_bonus_post_tax || 0,
-    // Добавляем константы из конфигурации
-    'НДС': config.vat_rate,
-    'КПН': config.kpn_tax_rate,
-    'налог': config.client_bonus_tax_rate,
-  }
-
-  // Применяем пользовательские формулы
-  Object.entries(customFormulas).forEach(([key, formula]) => {
-    if (formula && formula.trim() !== '') {
-      try {
-        const calculatedValue = parseCustomFormula(formula, variables)
-        
-        // Обновляем соответствующее поле
-        switch (key) {
-          case 'delivery_per_unit':
-            result.delivery_per_unit = calculatedValue
-            variables.F = calculatedValue
-            break
-          case 'sum_with_delivery':
-            result.sum_with_delivery = calculatedValue
-            variables.G = calculatedValue
-            break
-          case 'financial_load':
-            result.financial_load = calculatedValue
-            variables.J = calculatedValue
-            break
-          case 'sum_with_load':
-            result.sum_with_load = calculatedValue
-            variables.K = calculatedValue
-            break
-          case 'markup':
-            result.markup = calculatedValue
-            variables.M = calculatedValue
-            break
-          case 'markup_percent':
-            result.markup_percent = calculatedValue
-            variables.L = calculatedValue
-            break
-          case 'selling_price_no_vat':
-            result.selling_price_no_vat = calculatedValue
-            variables.N = calculatedValue
-            break
-          case 'nds_tax':
-            result.nds_tax = calculatedValue
-            variables.O = calculatedValue
-            break
-          case 'manager_bonus_unit':
-            result.manager_bonus_unit = calculatedValue
-            variables.S = calculatedValue
-            break
-          case 'income_pre_kpn':
-            result.income_pre_kpn = calculatedValue
-            variables.T = calculatedValue
-            break
-          case 'kpn_tax':
-            result.kpn_tax = calculatedValue
-            variables.U = calculatedValue
-            break
-          case 'net_income_unit':
-            result.net_income_unit = calculatedValue
-            variables.V = calculatedValue
-            break
-          case 'margin_percent':
-            result.margin_percent = calculatedValue
-            variables.W = calculatedValue
-            break
-          case 'total_selling_vat':
-            result.total_selling_vat = calculatedValue
-            variables.X = calculatedValue
-            break
-          case 'total_selling_bonus':
-            result.total_selling_bonus = calculatedValue
-            variables.Y = calculatedValue
-            break
-          case 'total_net_income':
-            result.total_net_income = calculatedValue
-            variables.Z = calculatedValue
-            break
-          case 'total_purchase':
-            result.total_purchase = calculatedValue
-            variables.AA = calculatedValue
-            break
-          case 'total_expenses':
-            result.total_expenses = calculatedValue
-            variables.AB = calculatedValue
-            break
-          case 'total_manager_bonuses':
-            result.total_manager_bonuses = calculatedValue
-            variables.AC = calculatedValue
-            break
-          case 'unit_bonus_client':
-            result.unit_bonus_client = calculatedValue
-            variables.AD = calculatedValue
-            break
-          case 'total_client_bonus_post_tax':
-            result.total_client_bonus_post_tax = calculatedValue
-            variables.AF = calculatedValue
-            break
-        }
-      } catch (error) {
-        console.error(`Error applying custom formula for ${key}:`, error)
-      }
-    }
-  })
-
-  return result
 }

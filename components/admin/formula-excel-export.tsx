@@ -4,7 +4,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Download, Upload, FileSpreadsheet } from "lucide-react"
-// Динамические импорты для поддержки SSR
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
 
 interface FormulaConfig {
   financial_load_percent: number
@@ -55,10 +56,6 @@ export function FormulaExcelExport({ config, customFormulas, onImport }: Formula
     setIsExporting(true)
     
     try {
-      // Динамический импорт для поддержки SSR
-      const XLSX = await import('xlsx')
-      const { saveAs } = await import('file-saver')
-      
       // Создаем рабочую книгу
       const workbook = XLSX.utils.book_new()
       
@@ -113,18 +110,15 @@ export function FormulaExcelExport({ config, customFormulas, onImport }: Formula
     }
   }
 
-  const importFromExcel = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const importFromExcel = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
     setIsImporting(true)
     
     const reader = new FileReader()
-    reader.onload = async (e) => {
+    reader.onload = (e) => {
       try {
-        // Динамический импорт для поддержки SSR
-        const XLSX = await import('xlsx')
-        
         const data = new Uint8Array(e.target?.result as ArrayBuffer)
         const workbook = XLSX.read(data, { type: 'array' })
         

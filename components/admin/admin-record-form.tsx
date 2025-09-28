@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { calculateSalesRecord, formatCurrency, formatPercent, type SalesRecord } from "@/lib/calculations"
 import { calculateSalesRecordWithSettings } from "@/lib/calculations-with-settings"
 import { recordStorage, type StoredRecord } from "@/lib/storage"
-import { useFormulaSettings } from "@/hooks/use-formula-settings"
+import { useFormulaSettings } from "@/contexts/formula-settings-context"
 import { Calendar, AlertTriangle } from "lucide-react"
 
 interface AdminRecordFormProps {

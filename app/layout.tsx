@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { AuthProvider } from "@/contexts/auth-context"
+import { FormulaSettingsProvider } from "@/contexts/formula-settings-context"
 import { Suspense } from "react"
 import "./globals.css"
 
@@ -20,7 +21,11 @@ export default function RootLayout({
     <html lang="ru">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <Suspense fallback={<div>Loading...</div>}>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <FormulaSettingsProvider>
+              {children}
+            </FormulaSettingsProvider>
+          </AuthProvider>
         </Suspense>
       </body>
     </html>

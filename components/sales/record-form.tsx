@@ -13,7 +13,7 @@ import { calculateSalesRecord, formatCurrency, formatPercent, type SalesRecord }
 import { calculateSalesRecordWithSettings } from "@/lib/calculations-with-settings"
 import { recordStorage, type StoredRecord } from "@/lib/storage"
 import { useAuth } from "@/contexts/auth-context"
-import { useFormulaSettings } from "@/hooks/use-formula-settings"
+import { useFormulaSettings } from "@/contexts/formula-settings-context"
 import { Calendar, AlertTriangle } from "lucide-react"
 
 interface RecordFormProps {
