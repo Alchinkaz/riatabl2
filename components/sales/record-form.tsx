@@ -10,8 +10,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { calculateSalesRecord, formatCurrency, formatPercent, type SalesRecord } from "@/lib/calculations"
+import { calculateSalesRecordWithSettings } from "@/lib/calculations-with-settings"
 import { recordStorage, type StoredRecord } from "@/lib/storage"
 import { useAuth } from "@/contexts/auth-context"
+import { useFormulaSettings } from "@/hooks/use-formula-settings"
 import { Calendar, AlertTriangle } from "lucide-react"
 
 interface RecordFormProps {
@@ -23,6 +25,7 @@ interface RecordFormProps {
 
 export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordFormProps) {
   const { user } = useAuth()
+  const { config, customFormulas, isLoading: settingsLoading } = useFormulaSettings()
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     counterparty: "",
@@ -65,20 +68,20 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      if (formData.quantity > 0) {
-        const calc = calculateSalesRecord({
+      if (formData.quantity > 0 && !settingsLoading) {
+        const calc = calculateSalesRecordWithSettings({
           quantity: formData.quantity,
           purchase_price: formData.purchase_price,
           total_delivery: formData.total_delivery,
           selling_with_bonus: formData.selling_with_bonus,
           client_bonus: formData.client_bonus,
-        })
+        }, config, customFormulas)
         setCalculations(calc)
       }
     }, 300)
 
     return () => clearTimeout(debounceTimer)
-  }, [formData])
+  }, [formData, config, customFormulas, settingsLoading])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
