@@ -21,6 +21,8 @@ import { Badge } from "@/components/ui/badge"
 import { Edit, User, Eye, EyeOff } from "lucide-react"
 import type { StoredUser } from "@/lib/user-storage"
 import { useRouter } from "next/navigation"
+import { FormulaEditor } from "@/components/admin/formula-editor"
+import { RecordFormulaEditor } from "@/components/admin/record-formula-editor"
 
 export default function SettingsPage() {
   const { user, isAdmin } = useAuth()
@@ -113,6 +115,8 @@ export default function SettingsPage() {
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList>
             <TabsTrigger value="profile">Мой профиль</TabsTrigger>
+            <TabsTrigger value="formulas">Формулы системы</TabsTrigger>
+            <TabsTrigger value="record-formulas">Формулы записей</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
@@ -212,6 +216,14 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="formulas" className="space-y-6">
+            <FormulaEditor />
+          </TabsContent>
+
+          <TabsContent value="record-formulas" className="space-y-6">
+            <RecordFormulaEditor />
           </TabsContent>
         </Tabs>
       </main>
