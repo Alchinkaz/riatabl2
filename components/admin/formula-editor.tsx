@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge"
 import { Calculator, Save, RotateCcw, Info, Edit3 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { FormulaExcelExport } from "./formula-excel-export"
+import { FormulaTemplateGenerator } from "./formula-template-generator"
 
 interface FormulaConfig {
   financial_load_percent: number
@@ -209,6 +211,11 @@ export function FormulaEditor() {
     }
   }
 
+  const handleExcelImport = (newConfig: FormulaConfig, newFormulas: CustomFormulas) => {
+    setConfig(newConfig)
+    setCustomFormulas(newFormulas)
+  }
+
   const handleConfigChange = (key: keyof FormulaConfig, value: number) => {
     setConfig((prev) => ({ ...prev, [key]: value }))
   }
@@ -256,9 +263,10 @@ export function FormulaEditor() {
       </Alert>
 
       <Tabs defaultValue="parameters" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="parameters">Параметры</TabsTrigger>
           <TabsTrigger value="formulas">Редактор формул</TabsTrigger>
+          <TabsTrigger value="excel">Excel импорт/экспорт</TabsTrigger>
           <TabsTrigger value="reference">Справочник</TabsTrigger>
         </TabsList>
 
@@ -375,6 +383,17 @@ export function FormulaEditor() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="excel" className="space-y-4">
+          <div className="grid gap-6 md:grid-cols-1">
+            <FormulaExcelExport 
+              config={config}
+              customFormulas={customFormulas}
+              onImport={handleExcelImport}
+            />
+            <FormulaTemplateGenerator />
+          </div>
         </TabsContent>
 
         <TabsContent value="reference" className="space-y-4">

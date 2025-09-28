@@ -37,12 +37,14 @@
     "@radix-ui/react-toggle": "latest",
     "@radix-ui/react-toggle-group": "latest",
     "@radix-ui/react-tooltip": "latest",
+    "@supabase/supabase-js": "^2.47.10",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "latest",
     "date-fns": "latest",
     "embla-carousel-react": "latest",
+    "file-saver": "^2.0.5",
     "geist": "latest",
     "input-otp": "latest",
     "lucide-react": "^0.454.0",
@@ -58,8 +60,8 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "latest",
-    "zod": "3.25.67",
-    "@supabase/supabase-js": "^2.47.10"
+    "xlsx": "^0.18.5",
+    "zod": "3.25.67"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",
