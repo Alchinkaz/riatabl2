@@ -69,6 +69,7 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       if (formData.quantity > 0 && !settingsLoading) {
+        console.log('RecordForm: Using settings:', { config, customFormulas })
         const calc = calculateSalesRecordWithSettings({
           quantity: formData.quantity,
           purchase_price: formData.purchase_price,
@@ -76,6 +77,7 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
           selling_with_bonus: formData.selling_with_bonus,
           client_bonus: formData.client_bonus,
         }, config, customFormulas)
+        console.log('RecordForm: Calculated result:', calc)
         setCalculations(calc)
       }
     }, 300)

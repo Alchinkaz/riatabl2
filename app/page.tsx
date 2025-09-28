@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Calculator, Users, BarChart3, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { DebugFormulaSettings } from "@/components/debug-formula-settings"
 
 function Dashboard() {
   const { user, isAdmin } = useAuth()
@@ -93,6 +94,10 @@ function Dashboard() {
               </CardDescription>
             </CardHeader>
           </Card>
+        </div>
+
+        <div className="mt-8">
+          <DebugFormulaSettings />
         </div>
       </main>
     </div>

@@ -112,6 +112,20 @@ export function FormulaSettingsProvider({ children }: { children: React.ReactNod
           
           // Сохраняем в кэш
           setCachedSettings(user.id, newConfig, newFormulas)
+        } else {
+          // Если настройки не найдены, создаем их
+          console.log('No settings found, creating default settings for user:', user.id)
+          const { error: createError } = await supabase.from("user_settings").upsert({
+            user_id: user.id,
+            formula_config: DEFAULT_CONFIG,
+            custom_formulas: DEFAULT_CUSTOM_FORMULAS,
+          }, { onConflict: "user_id" })
+          
+          if (!createError) {
+            setConfig(DEFAULT_CONFIG)
+            setCustomFormulas(DEFAULT_CUSTOM_FORMULAS)
+            setCachedSettings(user.id, DEFAULT_CONFIG, DEFAULT_CUSTOM_FORMULAS)
+          }
         }
       } catch (err) {
         console.error("Error loading formula settings:", err)
