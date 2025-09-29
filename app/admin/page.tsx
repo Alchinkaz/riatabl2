@@ -177,10 +177,6 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4 mr-2" />
               Пользователи
             </Button>
-            <Button onClick={handleCreateRecord}>
-              <Plus className="h-4 w-4 mr-2" />
-              Создать запись
-            </Button>
           </div>
         </div>
 
