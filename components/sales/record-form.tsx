@@ -221,7 +221,7 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 step="1"
                 value={formData.quantity}
                 onChange={(e) => setFormData((prev) => ({ ...prev, quantity: e.target.value }))}
-                placeholder="20"
+                placeholder="например, 20"
                 className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
               />
@@ -237,7 +237,7 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 step="0.01"
                 value={formData.purchase_price}
                 onChange={(e) => setFormData((prev) => ({ ...prev, purchase_price: e.target.value }))}
-                placeholder="12500"
+                placeholder="например, 12500"
                 className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
               />
@@ -253,7 +253,7 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 step="0.01"
                 value={formData.total_delivery}
                 onChange={(e) => setFormData((prev) => ({ ...prev, total_delivery: e.target.value }))}
-                placeholder="200"
+                placeholder="например, 200"
                 className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
               />
@@ -269,7 +269,7 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 step="0.01"
                 value={formData.selling_with_bonus}
                 onChange={(e) => setFormData((prev) => ({ ...prev, selling_with_bonus: e.target.value }))}
-                placeholder="35000"
+                placeholder="например, 35000"
                 className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
               />
@@ -285,7 +285,7 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 step="0.01"
                 value={formData.client_bonus}
                 onChange={(e) => setFormData((prev) => ({ ...prev, client_bonus: e.target.value }))}
-                placeholder="200000"
+                placeholder="например, 200000"
                 className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
               />
