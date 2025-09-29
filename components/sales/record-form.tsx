@@ -30,11 +30,11 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
     date: new Date().toISOString().split("T")[0],
     counterparty: "",
     name: "",
-    quantity: 0,
-    purchase_price: 0,
-    total_delivery: 0,
-    selling_with_bonus: 0,
-    client_bonus: 0,
+    quantity: "",
+    purchase_price: "",
+    total_delivery: "",
+    selling_with_bonus: "",
+    client_bonus: "",
   })
   const [calculations, setCalculations] = useState<SalesRecord | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -46,22 +46,22 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
         date: record.date ? new Date(record.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
         counterparty: record.counterparty,
         name: record.name,
-        quantity: record.quantity,
-        purchase_price: record.purchase_price,
-        total_delivery: record.total_delivery,
-        selling_with_bonus: record.selling_with_bonus,
-        client_bonus: record.client_bonus,
+        quantity: String(record.quantity ?? ""),
+        purchase_price: String(record.purchase_price ?? ""),
+        total_delivery: String(record.total_delivery ?? ""),
+        selling_with_bonus: String(record.selling_with_bonus ?? ""),
+        client_bonus: String(record.client_bonus ?? ""),
       })
     } else {
       setFormData({
         date: new Date().toISOString().split("T")[0],
         counterparty: "",
         name: "",
-        quantity: 0,
-        purchase_price: 0,
-        total_delivery: 0,
-        selling_with_bonus: 0,
-        client_bonus: 0,
+        quantity: "",
+        purchase_price: "",
+        total_delivery: "",
+        selling_with_bonus: "",
+        client_bonus: "",
       })
     }
   }, [record, open])
@@ -75,14 +75,19 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
     })
     
     const debounceTimer = setTimeout(() => {
-      if (formData.quantity > 0 && !settingsLoading) {
+      const qty = Number.parseInt(formData.quantity) || 0
+      const purchase = Number.parseFloat(formData.purchase_price) || 0
+      const delivery = Number.parseFloat(formData.total_delivery) || 0
+      const selling = Number.parseFloat(formData.selling_with_bonus) || 0
+      const bonus = Number.parseFloat(formData.client_bonus) || 0
+      if (qty > 0 && !settingsLoading) {
         console.log('RecordForm: Recalculating with settings:', { config, customFormulas })
         const calc = calculateSalesRecordWithSettings({
-          quantity: formData.quantity,
-          purchase_price: formData.purchase_price,
-          total_delivery: formData.total_delivery,
-          selling_with_bonus: formData.selling_with_bonus,
-          client_bonus: formData.client_bonus,
+          quantity: qty,
+          purchase_price: purchase,
+          total_delivery: delivery,
+          selling_with_bonus: selling,
+          client_bonus: bonus,
         }, config, customFormulas)
         console.log('RecordForm: Calculation result:', calc)
         setCalculations(calc as SalesRecord)
@@ -94,6 +99,11 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
+    const qty = Number.parseInt(formData.quantity) || 0
+    const purchase = Number.parseFloat(formData.purchase_price) || 0
+    const delivery = Number.parseFloat(formData.total_delivery) || 0
+    const selling = Number.parseFloat(formData.selling_with_bonus) || 0
+    const bonus = Number.parseFloat(formData.client_bonus) || 0
 
     if (!formData.date) newErrors.date = "Дата обязательна"
     if (!formData.counterparty || formData.counterparty.length < 2) {
@@ -102,11 +112,11 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
     if (!formData.name || formData.name.length < 3) {
       newErrors.name = "Наименование должно содержать минимум 3 символа"
     }
-    if (formData.quantity <= 0) newErrors.quantity = "Количество должно быть больше 0"
-    if (formData.purchase_price < 0) newErrors.purchase_price = "Закупочная цена не может быть отрицательной"
-    if (formData.total_delivery < 0) newErrors.total_delivery = "Сумма доставки не может быть отрицательной"
-    if (formData.selling_with_bonus < 0) newErrors.selling_with_bonus = "Цена продажи не может быть отрицательной"
-    if (formData.client_bonus < 0) newErrors.client_bonus = "Бонус клиента не может быть отрицательным"
+    if (qty <= 0) newErrors.quantity = "Количество должно быть больше 0"
+    if (purchase < 0) newErrors.purchase_price = "Закупочная цена не может быть отрицательной"
+    if (delivery < 0) newErrors.total_delivery = "Сумма доставки не может быть отрицательной"
+    if (selling < 0) newErrors.selling_with_bonus = "Цена продажи не может быть отрицательной"
+    if (bonus < 0) newErrors.client_bonus = "Бонус клиента не может быть отрицательным"
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -147,9 +157,7 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
     return "bg-red-500"
   }
 
-  const isLowSellingPrice = formData.selling_with_bonus < formData.purchase_price
-
-  const numericDisplay = (value: number) => (!record && value === 0 ? "" : value)
+  const isLowSellingPrice = (Number.parseFloat(formData.selling_with_bonus) || 0) < (Number.parseFloat(formData.purchase_price) || 0)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -211,8 +219,8 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 type="number"
                 min="1"
                 step="1"
-                value={numericDisplay(formData.quantity)}
-                onChange={(e) => setFormData((prev) => ({ ...prev, quantity: Number.parseInt(e.target.value) || 0 }))}
+                value={formData.quantity}
+                onChange={(e) => setFormData((prev) => ({ ...prev, quantity: e.target.value }))}
                 placeholder="20"
                 className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
@@ -227,10 +235,8 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 type="number"
                 min="0"
                 step="0.01"
-                value={numericDisplay(formData.purchase_price)}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, purchase_price: Number.parseFloat(e.target.value) || 0 }))
-                }
+                value={formData.purchase_price}
+                onChange={(e) => setFormData((prev) => ({ ...prev, purchase_price: e.target.value }))}
                 placeholder="12500"
                 className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
@@ -245,10 +251,8 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 type="number"
                 min="0"
                 step="0.01"
-                value={numericDisplay(formData.total_delivery)}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, total_delivery: Number.parseFloat(e.target.value) || 0 }))
-                }
+                value={formData.total_delivery}
+                onChange={(e) => setFormData((prev) => ({ ...prev, total_delivery: e.target.value }))}
                 placeholder="200"
                 className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
@@ -263,10 +267,8 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 type="number"
                 min="0"
                 step="0.01"
-                value={numericDisplay(formData.selling_with_bonus)}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, selling_with_bonus: Number.parseFloat(e.target.value) || 0 }))
-                }
+                value={formData.selling_with_bonus}
+                onChange={(e) => setFormData((prev) => ({ ...prev, selling_with_bonus: e.target.value }))}
                 placeholder="35000"
                 className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
@@ -281,10 +283,8 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 type="number"
                 min="0"
                 step="0.01"
-                value={numericDisplay(formData.client_bonus)}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, client_bonus: Number.parseFloat(e.target.value) || 0 }))
-                }
+                value={formData.client_bonus}
+                onChange={(e) => setFormData((prev) => ({ ...prev, client_bonus: e.target.value }))}
                 placeholder="200000"
                 className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
