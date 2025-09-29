@@ -303,7 +303,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Charts using filtered records */}
-            <SalesCharts records={filteredRecords} users={users} />
+            <SalesCharts records={filteredRecords || []} users={(users || []).map(u => ({ ...u, name: u.name ?? 'Без имени' }))} />
           </>
         )}
       </main>

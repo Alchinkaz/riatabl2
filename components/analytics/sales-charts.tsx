@@ -30,6 +30,8 @@ interface SalesChartsProps {
 }
 
 export function SalesCharts({ records, users }: SalesChartsProps) {
+  records = Array.isArray(records) ? records : []
+  users = Array.isArray(users) ? users : []
   // Calculate monthly data for the last 6 months
   const now = new Date()
   const sixMonthsAgo = subMonths(now, 5)
@@ -126,11 +128,12 @@ export function SalesCharts({ records, users }: SalesChartsProps) {
     .slice(0, 5)
 
   // Calculate totals and trends
-  const currentMonth = monthlyData[monthlyData.length - 1]
-  const previousMonth = monthlyData[monthlyData.length - 2]
+  const currentMonth = monthlyData[monthlyData.length - 1] || { income: 0, margin: 0, recordsCount: 0 }
+  const previousMonth = monthlyData[monthlyData.length - 2] || { income: 0, margin: 0 }
 
-  const incomeTrend =
-    currentMonth && previousMonth ? ((currentMonth.income - previousMonth.income) / previousMonth.income) * 100 : 0
+  const incomeTrend = previousMonth.income
+    ? ((currentMonth.income - previousMonth.income) / previousMonth.income) * 100
+    : 0
 
   const marginTrend = currentMonth && previousMonth ? currentMonth.margin - previousMonth.margin : 0
 
