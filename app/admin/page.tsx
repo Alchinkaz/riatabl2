@@ -110,10 +110,13 @@ export default function AdminDashboard() {
   }
 
   const handleDeleteRecord = async (record: StoredRecord) => {
-    if (confirm("Удалить эту запись? Это действие нельзя отменить.")) {
-      await recordStorage.delete(record.id)
-      await loadRecords()
+    if (!confirm("Удалить эту запись? Это действие нельзя отменить.")) return
+    const res = await fetch(`/api/admin/records/${record.id}`, { method: "DELETE" })
+    if (!res.ok) {
+      alert("Не удалось удалить запись")
+      return
     }
+    await loadRecords()
   }
 
   const handleFormSuccess = async () => {

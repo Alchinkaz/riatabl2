@@ -127,9 +127,19 @@ export function AdminRecordForm({ open, onOpenChange, record, onSuccess }: Admin
       }
 
       if (record) {
-        await recordStorage.update(record.id, recordData)
+        const res = await fetch(`/api/admin/records/${record.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(recordData),
+        })
+        if (!res.ok) throw new Error("Не удалось обновить запись")
       } else {
-        await recordStorage.create(recordData)
+        const res = await fetch(`/api/admin/records`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(recordData),
+        })
+        if (!res.ok) throw new Error("Не удалось создать запись")
       }
 
       onSuccess()
