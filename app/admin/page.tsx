@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AdminRecordForm } from "@/components/admin/admin-record-form"
 import { FormulaEditor } from "@/components/admin/formula-editor"
 import { RecordViewDialog } from "@/components/admin/record-view"
+import { useFormulaSettings } from "@/contexts/formula-settings-context"
+import { calculateSalesRecordWithSettings } from "@/lib/calculations-with-settings"
 import { recordStorage, type StoredRecord } from "@/lib/storage"
 // import { userStorage } from "@/lib/user-storage"
 import { supabase } from "@/lib/supabase"
@@ -25,12 +27,15 @@ import { useRouter } from "next/navigation"
 
 export default function AdminDashboard() {
   const { user, isAdmin } = useAuth()
+  const { config, customFormulas } = useFormulaSettings()
   const router = useRouter()
   const [records, setRecords] = useState<StoredRecord[]>([])
   const [filteredRecords, setFilteredRecords] = useState<StoredRecord[]>([])
   const [selectedRecord, setSelectedRecord] = useState<StoredRecord | undefined>()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isViewOpen, setIsViewOpen] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkManagerPercent, setBulkManagerPercent] = useState<string>("")
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("records")
   const [filterManager, setFilterManager] = useState("all")
@@ -128,6 +133,58 @@ export default function AdminDashboard() {
 
   const handleFormSuccess = async () => {
     await Promise.all([loadRecords(), loadUsers()])
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const selectAllFiltered = (checked: boolean) => {
+    if (checked) setSelectedIds(new Set(filteredRecords.map((r) => r.id)))
+    else setSelectedIds(new Set())
+  }
+
+  const applyBulkManagerPercent = async () => {
+    const percent = Number.parseFloat(bulkManagerPercent)
+    if (Number.isNaN(percent)) {
+      alert("Укажите корректный % менеджера")
+      return
+    }
+    if (selectedIds.size === 0) return
+
+    for (const id of selectedIds) {
+      const rec = records.find((r) => r.id === id)
+      if (!rec) continue
+      const overriddenConfig = { ...config, manager_bonus_percent: percent }
+      const calc = calculateSalesRecordWithSettings(
+        {
+          quantity: rec.quantity,
+          purchase_price: rec.purchase_price,
+          total_delivery: rec.total_delivery,
+          selling_with_bonus: rec.selling_with_bonus,
+          client_bonus: rec.client_bonus,
+        },
+        overriddenConfig,
+        customFormulas,
+      )
+      const payload = { ...rec, ...calc, manager_bonus_percent: percent }
+      const res = await fetch(`/api/admin/records/${rec.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        alert(`Не удалось обновить запись ${rec.name}`)
+      }
+    }
+    setSelectedIds(new Set())
+    setBulkManagerPercent("")
+    await loadRecords()
   }
 
   const clearFilters = () => {
@@ -330,6 +387,37 @@ export default function AdminDashboard() {
                     </Button>
                   </div>
                 </div>
+                {filteredRecords.length > 0 && (
+                  <div className="mt-4 flex flex-wrap items-center gap-3 p-3 border rounded-md bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={filteredRecords.length > 0 && selectedIds.size === filteredRecords.length}
+                        onChange={(e) => selectAllFiltered(e.target.checked)}
+                      />
+                      <span className="text-sm">Выбрать все</span>
+                    </div>
+                    <div className="h-4 w-px bg-gray-300" />
+                    <span className="text-sm text-muted-foreground">Выбрано: {selectedIds.size}</span>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm">% менеджера</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="h-9 px-3 py-1 border rounded-md w-24"
+                        value={bulkManagerPercent}
+                        onChange={(e) => setBulkManagerPercent(e.target.value)}
+                      />
+                      <button
+                        onClick={applyBulkManagerPercent}
+                        className="h-9 px-4 rounded-md border bg-background hover:bg-accent disabled:opacity-50"
+                        disabled={selectedIds.size === 0 || bulkManagerPercent === ""}
+                      >
+                        Применить к выбранным
+                      </button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -359,6 +447,13 @@ export default function AdminDashboard() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead>
+                            <input
+                              type="checkbox"
+                              checked={filteredRecords.length > 0 && selectedIds.size === filteredRecords.length}
+                              onChange={(e) => selectAllFiltered(e.target.checked)}
+                            />
+                          </TableHead>
                           <TableHead>Дата</TableHead>
                           <TableHead>Контрагент</TableHead>
                           <TableHead>Наименование</TableHead>
@@ -375,6 +470,13 @@ export default function AdminDashboard() {
                       <TableBody>
                         {filteredRecords.map((record) => (
                           <TableRow key={record.id}>
+                            <TableCell>
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.has(record.id)}
+                                onChange={() => toggleSelect(record.id)}
+                              />
+                            </TableCell>
                             <TableCell>
                               {record.date && !isNaN(new Date(record.date).getTime())
                                 ? format(new Date(record.date), "dd.MM.yyyy", { locale: ru })
