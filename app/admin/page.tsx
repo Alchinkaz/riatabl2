@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AdminRecordForm } from "@/components/admin/admin-record-form"
 import { FormulaEditor } from "@/components/admin/formula-editor"
+import { RecordViewDialog } from "@/components/admin/record-view"
 import { recordStorage, type StoredRecord } from "@/lib/storage"
 // import { userStorage } from "@/lib/user-storage"
 import { supabase } from "@/lib/supabase"
@@ -29,6 +30,7 @@ export default function AdminDashboard() {
   const [filteredRecords, setFilteredRecords] = useState<StoredRecord[]>([])
   const [selectedRecord, setSelectedRecord] = useState<StoredRecord | undefined>()
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isViewOpen, setIsViewOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("records")
   const [filterManager, setFilterManager] = useState("all")
@@ -107,6 +109,11 @@ export default function AdminDashboard() {
   const handleEditRecord = (record: StoredRecord) => {
     setSelectedRecord(record)
     setIsFormOpen(true)
+  }
+
+  const handleViewRecord = (record: StoredRecord) => {
+    setSelectedRecord(record)
+    setIsViewOpen(true)
   }
 
   const handleDeleteRecord = async (record: StoredRecord) => {
@@ -392,6 +399,9 @@ export default function AdminDashboard() {
                             <TableCell>{getUserName(record.created_by)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => handleViewRecord(record)}>
+                                  Просмотр
+                                </Button>
                                 <Button variant="ghost" size="sm" onClick={() => handleEditRecord(record)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -426,6 +436,8 @@ export default function AdminDashboard() {
           record={selectedRecord}
           onSuccess={handleFormSuccess}
         />
+
+        <RecordViewDialog open={isViewOpen} onOpenChange={setIsViewOpen} record={selectedRecord} />
       </main>
     </div>
   )
