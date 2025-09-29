@@ -30,7 +30,7 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
     date: new Date().toISOString().split("T")[0],
     counterparty: "",
     name: "",
-    quantity: 1,
+    quantity: 0,
     purchase_price: 0,
     total_delivery: 0,
     selling_with_bonus: 0,
@@ -57,7 +57,7 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
         date: new Date().toISOString().split("T")[0],
         counterparty: "",
         name: "",
-        quantity: 1,
+        quantity: 0,
         purchase_price: 0,
         total_delivery: 0,
         selling_with_bonus: 0,
@@ -149,6 +149,8 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
 
   const isLowSellingPrice = formData.selling_with_bonus < formData.purchase_price
 
+  const numericDisplay = (value: number) => (!record && value === 0 ? "" : value)
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -209,10 +211,10 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 type="number"
                 min="1"
                 step="1"
-                value={formData.quantity}
+                value={numericDisplay(formData.quantity)}
                 onChange={(e) => setFormData((prev) => ({ ...prev, quantity: Number.parseInt(e.target.value) || 0 }))}
                 placeholder="20"
-                className="border-yellow-500"
+                className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
               />
               {errors.quantity && <p className="text-sm text-red-500">{errors.quantity}</p>}
@@ -225,12 +227,12 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 type="number"
                 min="0"
                 step="0.01"
-                value={formData.purchase_price}
+                value={numericDisplay(formData.purchase_price)}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, purchase_price: Number.parseFloat(e.target.value) || 0 }))
                 }
                 placeholder="12500"
-                className="border-yellow-500"
+                className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
               />
               {errors.purchase_price && <p className="text-sm text-red-500">{errors.purchase_price}</p>}
@@ -243,12 +245,12 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 type="number"
                 min="0"
                 step="0.01"
-                value={formData.total_delivery}
+                value={numericDisplay(formData.total_delivery)}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, total_delivery: Number.parseFloat(e.target.value) || 0 }))
                 }
                 placeholder="200"
-                className="border-yellow-500"
+                className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
               />
               {errors.total_delivery && <p className="text-sm text-red-500">{errors.total_delivery}</p>}
@@ -261,12 +263,12 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 type="number"
                 min="0"
                 step="0.01"
-                value={formData.selling_with_bonus}
+                value={numericDisplay(formData.selling_with_bonus)}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, selling_with_bonus: Number.parseFloat(e.target.value) || 0 }))
                 }
                 placeholder="35000"
-                className="border-yellow-500"
+                className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
               />
               {errors.selling_with_bonus && <p className="text-sm text-red-500">{errors.selling_with_bonus}</p>}
@@ -279,12 +281,12 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 type="number"
                 min="0"
                 step="0.01"
-                value={formData.client_bonus}
+                value={numericDisplay(formData.client_bonus)}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, client_bonus: Number.parseFloat(e.target.value) || 0 }))
                 }
                 placeholder="200000"
-                className="border-yellow-500"
+                className="border-yellow-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                 required
               />
               {errors.client_bonus && <p className="text-sm text-red-500">{errors.client_bonus}</p>}
