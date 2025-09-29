@@ -86,23 +86,23 @@ export function calculateSalesRecordWithSettings(
   // M = P - K (Накрутка)
   const M = P - K
 
-  // L = (M / K) * 100 (% накрутки)
-  const L = K !== 0 ? (M / K) * 100 : 0
+  // L = ((P / K) - 1) * 100 (% накрутки)
+  const L = K !== 0 ? ((P / K) - 1) * 100 : 0
 
-  // НДС рассчитывается из цены продажи с НДС (P) по стандартной формуле «НДС включен»:
-  // O = P * (НДС / (100 + НДС)), N = P - O
-  const includedVatRatio = config.vat_rate / (100 + config.vat_rate)
-  const O = P * includedVatRatio
-  const N = P - O
+  // N = P / (1 + НДС) (Цена продажи без НДС)
+  const N = P / (1 + config.vat_rate / 100)
+
+  // O = (P - G) * (НДС / 100) (Налоги НДС)
+  const O = (P - G) * (config.vat_rate / 100)
 
   // R = manager_bonus_percent (% менеджера)
   const R = config.manager_bonus_percent
 
-  // S = N * (R / 100) (Бонус менеджера за ед.)
+  // S = N / 100 * R (Бонус менеджера за ед.)
   const S = N * (R / 100)
 
-  // T = P - E - F - J - S - O (Доход с ед. без вычета КПН)
-  const T = P - E - F - J - S - O
+  // T = P - S - K - O (Доход с ед. без вычета КПН)
+  const T = P - S - K - O
 
   // U = T * (kpn_tax_rate / 100) (Налоги КПН)
   const U = T * (config.kpn_tax_rate / 100)
@@ -110,14 +110,14 @@ export function calculateSalesRecordWithSettings(
   // V = T - U (Чистый доход за ед.)
   const V = T - U
 
-  // W = (V / P) * 100 (Маржа в %)
+  // W = V / (P / 100) (Маржа в %)
   const W = P !== 0 ? (V / P) * 100 : 0
 
   // X = D * P (Общая сумма продажи с НДС)
   const X = D * P
 
-  // Y = D * Q (Общая сумма продажи с НДС с учетом бонуса клиента)
-  const Y = D * Q
+  // Y = X + AE (Общая сумма продажи с НДС с учетом бонуса клиента)
+  const Y = X + AE
 
   // Z = D * V (Сумма чистого дохода компании)
   const Z = D * V
@@ -125,8 +125,8 @@ export function calculateSalesRecordWithSettings(
   // AA = D * E (Общая сумма закупа товара)
   const AA = D * E
 
-  // AB = AA + H + (D * J) + (D * S) + (D * O) + (D * U) (Сумма общих расходов)
-  const AB = AA + H + D * J + D * S + D * O + D * U
+  // AB = D * (F + O + J + S + U + E) (Сумма общих расходов)
+  const AB = D * (F + O + J + S + U + E)
 
   // AC = D * S (Общая сумма бонусов менеджера)
   const AC = D * S
