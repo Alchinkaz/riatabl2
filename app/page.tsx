@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Calculator, Users, BarChart3, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { DebugFormulaSettings } from "@/components/debug-formula-settings"
+// DebugFormulaSettings removed in production UI
 
 function Dashboard() {
   const { user, isAdmin } = useAuth()
@@ -96,9 +96,7 @@ function Dashboard() {
           </Card>
         </div>
 
-        <div className="mt-8">
-          <DebugFormulaSettings />
-        </div>
+        {/* Debug formula settings hidden */}
       </main>
     </div>
   )
