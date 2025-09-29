@@ -18,7 +18,7 @@ import { recordStorage, type StoredRecord } from "@/lib/storage"
 // import { userStorage } from "@/lib/user-storage"
 import { supabase } from "@/lib/supabase"
 import { formatCurrency, formatPercent } from "@/lib/calculations"
-import { Plus, Edit, Trash2, Filter, Users, TrendingUp, DollarSign, Target, Calculator } from "lucide-react"
+import { Plus, Edit, Trash2, Filter, Users, TrendingUp, DollarSign, Target, Calculator, Eye } from "lucide-react"
 import { format } from "date-fns"
 import { ru } from "date-fns/locale"
 import { useRouter } from "next/navigation"
@@ -400,7 +400,7 @@ export default function AdminDashboard() {
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <Button variant="ghost" size="sm" onClick={() => handleViewRecord(record)}>
-                                  Просмотр
+                                  <Eye className="h-4 w-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" onClick={() => handleEditRecord(record)}>
                                   <Edit className="h-4 w-4" />
