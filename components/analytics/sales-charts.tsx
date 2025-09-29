@@ -26,7 +26,7 @@ import { ru } from "date-fns/locale"
 
 interface SalesChartsProps {
   records: StoredRecord[]
-  users: Array<{ id: string; name: string; role: string }>
+  users: Array<{ id: string; name: string | null; role: string }>
 }
 
 export function SalesCharts({ records, users }: SalesChartsProps) {
@@ -71,7 +71,8 @@ export function SalesCharts({ records, users }: SalesChartsProps) {
           : 0
 
       return {
-        name: user.name,
+        id: user.id,
+        name: user.name || 'Без имени',
         role: user.role,
         income: totalIncome,
         margin: averageMargin,
@@ -359,7 +360,7 @@ export function SalesCharts({ records, users }: SalesChartsProps) {
         <CardContent>
           <div className="space-y-4">
             {userPerformance.map((user) => (
-              <div key={user.name} className="flex items-center justify-between p-4 border rounded-lg">
+              <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                     <Users className="h-5 w-5 text-blue-600" />
