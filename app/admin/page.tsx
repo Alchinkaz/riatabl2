@@ -39,7 +39,6 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("records")
   const [filterManager, setFilterManager] = useState("all")
-  const [filterYear, setFilterYear] = useState("all")
   const [filterMonth, setFilterMonth] = useState("all")
   const [filterDateFrom, setFilterDateFrom] = useState("")
   const [filterDateTo, setFilterDateTo] = useState("")
@@ -82,13 +81,6 @@ export default function AdminDashboard() {
       filtered = filtered.filter((record) => record.created_by === filterManager)
     }
 
-    if (filterYear !== "all") {
-      filtered = filtered.filter((record) => {
-        const recordDate = new Date(record.date)
-        return recordDate.getFullYear() === Number.parseInt(filterYear)
-      })
-    }
-
     if (filterMonth !== "all") {
       filtered = filtered.filter((record) => {
         const recordDate = new Date(record.date)
@@ -104,7 +96,7 @@ export default function AdminDashboard() {
     }
 
     setFilteredRecords(filtered)
-  }, [records, filterManager, filterYear, filterMonth, filterDateFrom, filterDateTo])
+  }, [records, filterManager, filterMonth, filterDateFrom, filterDateTo])
 
   const handleCreateRecord = () => {
     setSelectedRecord(undefined)
@@ -189,7 +181,6 @@ export default function AdminDashboard() {
 
   const clearFilters = () => {
     setFilterManager("all")
-    setFilterYear("all")
     setFilterMonth("all")
     setFilterDateFrom("")
     setFilterDateTo("")
@@ -335,20 +326,7 @@ export default function AdminDashboard() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Год</Label>
-                    <Select value={filterYear} onValueChange={setFilterYear}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Все годы" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Все годы</SelectItem>
-                        <SelectItem value="2023">2023</SelectItem>
-                        <SelectItem value="2024">2024</SelectItem>
-                        <SelectItem value="2025">2025</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  
                   <div className="space-y-2">
                     <Label>Месяц</Label>
                     <Select value={filterMonth} onValueChange={setFilterMonth}>
