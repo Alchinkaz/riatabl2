@@ -587,6 +587,9 @@ export default function AdminDashboard() {
                                 <Button variant="ghost" size="sm" onClick={() => handleViewRecord(record)}>
                                   <Eye className="h-4 w-4" />
                                 </Button>
+                                <Button variant="ghost" size="sm" onClick={() => handleEditRecord(record)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
