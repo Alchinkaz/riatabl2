@@ -474,9 +474,9 @@ export default function AdminDashboard() {
                           <TableHead>Наименование</TableHead>
                           <TableHead>Кол-во</TableHead>
                           <TableHead>Закуп в тенге</TableHead>
-                          <TableHead>Общий бонус клиент с вычетом налога</TableHead>
+                          <TableHead>Бонус клиента</TableHead>
                           <TableHead>Цена продажи</TableHead>
-                          <TableHead>Сумма чистого дохода компании</TableHead>
+                          <TableHead>Сумма дохода</TableHead>
                           <TableHead>Маржа %</TableHead>
                           <TableHead>Автор</TableHead>
                           <TableHead>Действия</TableHead>
