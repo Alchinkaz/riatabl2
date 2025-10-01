@@ -250,7 +250,7 @@ export default function AdminDashboard() {
           </TabsList>
 
           <TabsContent value="records" className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-5">
               <Card
                 className="cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => router.push("/admin/users")}
@@ -258,7 +258,7 @@ export default function AdminDashboard() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <Users className="h-4 w-4" />
-                    Управление пользователями
+                    Пользователи
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -302,6 +302,18 @@ export default function AdminDashboard() {
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses)}</div>
                   <p className="text-xs text-muted-foreground">Включая все налоги</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    Бонус менеджера
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{formatCurrency(totalManagerBonuses)}</div>
+                  <p className="text-xs text-muted-foreground">Сумма по отфильтрованным записям</p>
                 </CardContent>
               </Card>
             </div>
