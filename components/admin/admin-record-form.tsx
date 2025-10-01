@@ -46,7 +46,7 @@ export function AdminRecordForm({ open, onOpenChange, record, onSuccess }: Admin
   useEffect(() => {
     if (record) {
       setFormData({
-        date: record.date,
+        date: record.date ? new Date(record.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
         counterparty: record.counterparty,
         name: record.name,
         quantity: record.quantity,
@@ -123,7 +123,8 @@ export function AdminRecordForm({ open, onOpenChange, record, onSuccess }: Admin
       const recordData = {
         ...formData,
         ...calculations,
-        created_by: record?.created_by || "1", // Default to admin if creating new
+        date: formData.date,
+        created_by: record?.created_by || "1",
       }
 
       if (record) {
