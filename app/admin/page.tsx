@@ -42,6 +42,7 @@ export default function AdminDashboard() {
   const [filterMonth, setFilterMonth] = useState("all")
   const [filterDateFrom, setFilterDateFrom] = useState("")
   const [filterDateTo, setFilterDateTo] = useState("")
+  const [filterCounterparty, setFilterCounterparty] = useState("all")
   const [users, setUsers] = useState<{ id: string; email: string; name: string | null; role: string }[]>([])
 
   const loadRecords = async () => {
@@ -86,6 +87,10 @@ export default function AdminDashboard() {
         const recordDate = new Date(record.date)
         return recordDate.getMonth() === Number.parseInt(filterMonth) - 1
       })
+    }
+
+    if (filterCounterparty !== "all") {
+      filtered = filtered.filter((record) => record.counterparty === filterCounterparty)
     }
 
     if (filterDateFrom) {
@@ -197,7 +202,7 @@ export default function AdminDashboard() {
     return user ? user.name : "Неизвестный пользователь"
   }
 
-  const totalNetIncome = filteredRecords.reduce((sum, r) => sum + (r.total_net_income || 0), 0)
+  const totalSales = filteredRecords.reduce((sum, r) => sum + (r.total_selling_vat || 0), 0)
   const totalExpenses = filteredRecords.reduce((sum, r) => sum + (r.total_expenses || 0), 0)
   const totalManagerBonuses = filteredRecords.reduce((sum, r) => sum + (r.total_manager_bonuses || 0), 0)
   const averageMargin =
@@ -267,11 +272,11 @@ export default function AdminDashboard() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <DollarSign className="h-4 w-4" />
-                    Общий чистый доход
+                    Общая сумма продаж
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{formatCurrency(totalNetIncome)}</div>
+                  <div className="text-2xl font-bold text-green-600">{formatCurrency(totalSales)}</div>
                   <p className="text-xs text-muted-foreground">{filteredRecords.length} записей</p>
                 </CardContent>
               </Card>
@@ -309,7 +314,7 @@ export default function AdminDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-6">
+                <div className="grid gap-4 md:grid-cols-7">
                   <div className="space-y-2">
                     <Label>Менеджер</Label>
                     <Select value={filterManager} onValueChange={setFilterManager}>
@@ -321,6 +326,22 @@ export default function AdminDashboard() {
                         {users.map((user) => (
                           <SelectItem key={user.id} value={user.id}>
                             {user.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Контрагент</Label>
+                    <Select value={filterCounterparty} onValueChange={setFilterCounterparty}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Все контрагенты" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все контрагенты</SelectItem>
+                        {Array.from(new Set(records.map((r) => r.counterparty))).map((cp) => (
+                          <SelectItem key={cp} value={cp}>
+                            {cp || "Не указан"}
                           </SelectItem>
                         ))}
                       </SelectContent>

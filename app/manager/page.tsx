@@ -4,6 +4,9 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Header } from "@/components/layout/header"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -17,9 +20,13 @@ import { ru } from "date-fns/locale"
 export default function ManagerDashboard() {
   const { user } = useAuth()
   const [records, setRecords] = useState<StoredRecord[]>([])
+  const [filteredRecords, setFilteredRecords] = useState<StoredRecord[]>([])
   const [selectedRecord, setSelectedRecord] = useState<StoredRecord | undefined>()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [filterMonth, setFilterMonth] = useState("all")
+  const [filterDateFrom, setFilterDateFrom] = useState("")
+  const [filterDateTo, setFilterDateTo] = useState("")
 
   const loadRecords = async () => {
     if (user) {
@@ -32,6 +39,32 @@ export default function ManagerDashboard() {
   useEffect(() => {
     loadRecords()
   }, [user])
+
+  useEffect(() => {
+    let filtered = [...records]
+
+    if (filterMonth !== "all") {
+      filtered = filtered.filter((record) => {
+        const recordDate = new Date(record.date)
+        return recordDate.getMonth() === Number.parseInt(filterMonth) - 1
+      })
+    }
+
+    if (filterDateFrom) {
+      filtered = filtered.filter((record) => new Date(record.date) >= new Date(filterDateFrom))
+    }
+    if (filterDateTo) {
+      filtered = filtered.filter((record) => new Date(record.date) <= new Date(filterDateTo))
+    }
+
+    setFilteredRecords(filtered)
+  }, [records, filterMonth, filterDateFrom, filterDateTo])
+
+  const clearFilters = () => {
+    setFilterMonth("all")
+    setFilterDateFrom("")
+    setFilterDateTo("")
+  }
 
   const handleCreateRecord = () => {
     setSelectedRecord(undefined)
@@ -84,16 +117,16 @@ export default function ManagerDashboard() {
               <CardTitle className="text-sm font-medium">Всего записей</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{records.length}</div>
+              <div className="text-2xl font-bold">{filteredRecords.length}</div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Общий доход</CardTitle>
+              <CardTitle className="text-sm font-medium">Общая сумма продаж</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {formatCurrency(records.reduce((sum, r) => sum + (r.total_net_income || 0), 0))}
+                {formatCurrency(filteredRecords.reduce((sum, r) => sum + (r.total_selling_vat || 0), 0))}
               </div>
             </CardContent>
           </Card>
@@ -103,23 +136,70 @@ export default function ManagerDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {records.length > 0
-                  ? formatPercent(records.reduce((sum, r) => sum + (r.margin_percent || 0), 0) / records.length)
+                {filteredRecords.length > 0
+                  ? formatPercent(filteredRecords.reduce((sum, r) => sum + (r.margin_percent || 0), 0) / filteredRecords.length)
                   : "0%"}
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Общие расходы</CardTitle>
+              <CardTitle className="text-sm font-medium">Бонус менеджера</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {formatCurrency(records.reduce((sum, r) => sum + (r.total_expenses || 0), 0))}
-              </div>
+              <div className="text-2xl font-bold text-red-600">{formatCurrency(filteredRecords.reduce((sum, r) => sum + (r.total_manager_bonuses || 0), 0))}</div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Filters */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Фильтры</CardTitle>
+            <CardDescription>Фильтрация по месяцу и периоду</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-4">
+              <div className="space-y-2">
+                <Label>Месяц</Label>
+                <Select value={filterMonth} onValueChange={setFilterMonth}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Все месяцы" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все месяцы</SelectItem>
+                    <SelectItem value="1">Январь</SelectItem>
+                    <SelectItem value="2">Февраль</SelectItem>
+                    <SelectItem value="3">Март</SelectItem>
+                    <SelectItem value="4">Апрель</SelectItem>
+                    <SelectItem value="5">Май</SelectItem>
+                    <SelectItem value="6">Июнь</SelectItem>
+                    <SelectItem value="7">Июль</SelectItem>
+                    <SelectItem value="8">Август</SelectItem>
+                    <SelectItem value="9">Сентябрь</SelectItem>
+                    <SelectItem value="10">Октябрь</SelectItem>
+                    <SelectItem value="11">Ноябрь</SelectItem>
+                    <SelectItem value="12">Декабрь</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Дата от</Label>
+                <Input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Дата до</Label>
+                <Input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>&nbsp;</Label>
+                <Button variant="outline" onClick={clearFilters} className="w-full bg-transparent">
+                  Очистить
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Records Table */}
         <Card>
@@ -164,7 +244,7 @@ export default function ManagerDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {records.map((record) => (
+                    {filteredRecords.map((record) => (
                       <TableRow key={record.id}>
                         <TableCell>
                           {(() => {
