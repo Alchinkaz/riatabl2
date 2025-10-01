@@ -44,6 +44,19 @@ export default function AdminDashboard() {
   const [filterDateTo, setFilterDateTo] = useState("")
   const [filterCounterparty, setFilterCounterparty] = useState("all")
   const [users, setUsers] = useState<{ id: string; email: string; name: string | null; role: string }[]>([])
+  const [sortKey, setSortKey] = useState<
+    | "date"
+    | "counterparty"
+    | "name"
+    | "quantity"
+    | "purchase_price"
+    | "total_client_bonus_post_tax"
+    | "selling_with_bonus"
+    | "total_net_income"
+    | "margin_percent"
+    | "author"
+  >("date")
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
 
   const loadRecords = async () => {
     // Для админа берём все записи через серверный API, чтобы обойти RLS
@@ -201,6 +214,12 @@ export default function AdminDashboard() {
     return "text-red-600 bg-red-50"
   }
 
+  const getRowBgColor = (margin: number) => {
+    if (margin >= 30) return "bg-green-50"
+    if (margin >= 14) return "bg-yellow-50"
+    return "bg-red-50"
+  }
+
   const getUserName = (userId: string) => {
     const user = users.find((u) => u.id === userId)
     return user ? user.name : "Неизвестный пользователь"
@@ -213,6 +232,53 @@ export default function AdminDashboard() {
     filteredRecords.length > 0
       ? filteredRecords.reduce((sum, r) => sum + (r.margin_percent || 0), 0) / filteredRecords.length
       : 0
+
+  const handleSort = (key: typeof sortKey) => {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === "asc" ? "desc" : "asc"))
+    } else {
+      setSortKey(key)
+      setSortDir("asc")
+    }
+  }
+
+  const getSortableValue = (record: StoredRecord, key: typeof sortKey): string | number => {
+    switch (key) {
+      case "date":
+        return record.date ? new Date(record.date).getTime() : 0
+      case "counterparty":
+        return (record.counterparty || "").toLowerCase()
+      case "name":
+        return (record.name || "").toLowerCase()
+      case "quantity":
+        return record.quantity || 0
+      case "purchase_price":
+        return record.purchase_price || 0
+      case "total_client_bonus_post_tax":
+        return record.total_client_bonus_post_tax || 0
+      case "selling_with_bonus":
+        return record.selling_with_bonus || 0
+      case "total_net_income":
+        return record.total_net_income || 0
+      case "margin_percent":
+        return record.margin_percent || 0
+      case "author":
+        return (getUserName(record.created_by) || "").toLowerCase()
+      default:
+        return 0
+    }
+  }
+
+  const sortedRecords = [...filteredRecords].sort((a, b) => {
+    const va = getSortableValue(a, sortKey)
+    const vb = getSortableValue(b, sortKey)
+    if (typeof va === "number" && typeof vb === "number") {
+      return sortDir === "asc" ? va - vb : vb - va
+    }
+    const sa = String(va)
+    const sb = String(vb)
+    return sortDir === "asc" ? sa.localeCompare(sb) : sb.localeCompare(sa)
+  })
 
   if (!isAdmin) {
     return (
@@ -469,22 +535,22 @@ export default function AdminDashboard() {
                               onChange={(e) => selectAllFiltered(e.target.checked)}
                             />
                           </TableHead>
-                          <TableHead>Дата</TableHead>
-                          <TableHead>Контрагент</TableHead>
-                          <TableHead>Наименование</TableHead>
-                          <TableHead>Кол-во</TableHead>
-                          <TableHead>Закуп в тенге</TableHead>
-                          <TableHead>Бонус клиента</TableHead>
-                          <TableHead>Цена продажи</TableHead>
-                          <TableHead>Сумма дохода</TableHead>
-                          <TableHead>Маржа %</TableHead>
-                          <TableHead>Автор</TableHead>
+                          <TableHead className="cursor-pointer" onClick={() => handleSort("date")}>Дата</TableHead>
+                          <TableHead className="cursor-pointer" onClick={() => handleSort("counterparty")}>Контрагент</TableHead>
+                          <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>Наименование</TableHead>
+                          <TableHead className="cursor-pointer" onClick={() => handleSort("quantity")}>Кол-во</TableHead>
+                          <TableHead className="cursor-pointer" onClick={() => handleSort("purchase_price")}>Закуп в тенге</TableHead>
+                          <TableHead className="cursor-pointer" onClick={() => handleSort("total_client_bonus_post_tax")}>Бонус клиента</TableHead>
+                          <TableHead className="cursor-pointer" onClick={() => handleSort("selling_with_bonus")}>Цена продажи</TableHead>
+                          <TableHead className="cursor-pointer" onClick={() => handleSort("total_net_income")}>Сумма дохода</TableHead>
+                          <TableHead className="cursor-pointer" onClick={() => handleSort("margin_percent")}>Маржа %</TableHead>
+                          <TableHead className="cursor-pointer" onClick={() => handleSort("author")}>Автор</TableHead>
                           <TableHead>Действия</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredRecords.map((record) => (
-                          <TableRow key={record.id}>
+                        {sortedRecords.map((record) => (
+                          <TableRow key={record.id} className={getRowBgColor(record.margin_percent || 0)}>
                             <TableCell>
                               <input
                                 type="checkbox"
