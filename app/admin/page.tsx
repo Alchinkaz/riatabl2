@@ -217,7 +217,7 @@ export default function AdminDashboard() {
   const getRowBgColor = (margin: number) => {
     if (margin >= 30) return "bg-green-50"
     if (margin >= 14) return "bg-yellow-50"
-    return "bg-red-50"
+    return "bg-red-100"
   }
 
   const getUserName = (userId: string) => {
