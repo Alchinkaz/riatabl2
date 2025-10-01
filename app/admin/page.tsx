@@ -126,6 +126,8 @@ export default function AdminDashboard() {
   }
 
   const handleEditRecord = (record: StoredRecord) => {
+    // Ensure view dialog is closed before opening edit
+    setIsViewOpen(false)
     setSelectedRecord(record)
     setIsFormOpen(true)
   }
@@ -614,6 +616,7 @@ export default function AdminDashboard() {
         </Tabs>
 
         <AdminRecordForm
+          key={selectedRecord?.id || "new"}
           open={isFormOpen}
           onOpenChange={setIsFormOpen}
           record={selectedRecord}
