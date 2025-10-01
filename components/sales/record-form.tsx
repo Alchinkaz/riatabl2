@@ -261,7 +261,7 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="selling_with_bonus">Цена продажи с бонусом клиента</Label>
+              <Label htmlFor="selling_with_bonus">Цена продажи</Label>
               <Input
                 id="selling_with_bonus"
                 type="number"
