@@ -1,20 +1,96 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { formatCurrency, formatPercent } from "@/lib/calculations"
 import type { StoredRecord } from "@/lib/storage"
+import { useFormulaSettings } from "@/contexts/formula-settings-context"
+import { calculateSalesRecordWithSettings } from "@/lib/calculations-with-settings"
 
 interface RecordViewDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   record?: StoredRecord
+  onSuccess?: () => void
 }
 
-export function RecordViewDialog({ open, onOpenChange, record }: RecordViewDialogProps) {
+export function RecordViewDialog({ open, onOpenChange, record, onSuccess }: RecordViewDialogProps) {
+  const { config, customFormulas } = useFormulaSettings()
+  const [formData, setFormData] = useState({
+    date: "",
+    counterparty: "",
+    name: "",
+    quantity: 0,
+    purchase_price: 0,
+    total_delivery: 0,
+    selling_with_bonus: 0,
+    client_bonus: 0,
+  })
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (record && open) {
+      setFormData({
+        date: record.date ? new Date(record.date).toISOString().split("T")[0] : "",
+        counterparty: record.counterparty || "",
+        name: record.name || "",
+        quantity: record.quantity || 0,
+        purchase_price: record.purchase_price || 0,
+        total_delivery: record.total_delivery || 0,
+        selling_with_bonus: record.selling_with_bonus || 0,
+        client_bonus: record.client_bonus || 0,
+      })
+    }
+  }, [record, open])
+
   if (!record) return null
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true)
+      const computed = calculateSalesRecordWithSettings(
+        {
+          quantity: formData.quantity,
+          purchase_price: formData.purchase_price,
+          total_delivery: formData.total_delivery,
+          selling_with_bonus: formData.selling_with_bonus,
+          client_bonus: formData.client_bonus,
+        },
+        config,
+        customFormulas,
+      )
+
+      const payload = {
+        ...record,
+        ...computed,
+        date: formData.date,
+        counterparty: formData.counterparty,
+        name: formData.name,
+        quantity: formData.quantity,
+        purchase_price: formData.purchase_price,
+        total_delivery: formData.total_delivery,
+        selling_with_bonus: formData.selling_with_bonus,
+        client_bonus: formData.client_bonus,
+      }
+
+      const res = await fetch(`/api/admin/records/${record.id}` , {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) throw new Error("Не удалось сохранить изменения")
+      onSuccess && onSuccess()
+      onOpenChange(false)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -25,35 +101,39 @@ export function RecordViewDialog({ open, onOpenChange, record }: RecordViewDialo
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Basic info */}
+          {/* Basic info (editable) */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Дата</Label>
-              <Input value={record.date} readOnly />
+              <Input type="date" value={formData.date} onChange={(e) => setFormData((p) => ({ ...p, date: e.target.value }))} />
             </div>
             <div className="space-y-2">
               <Label>Контрагент</Label>
-              <Input value={record.counterparty} readOnly />
+              <Input value={formData.counterparty} onChange={(e) => setFormData((p) => ({ ...p, counterparty: e.target.value }))} />
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label>Наименование</Label>
-              <Input value={record.name} readOnly />
+              <Input value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} />
             </div>
             <div className="space-y-2">
               <Label>Количество</Label>
-              <Input value={record.quantity} readOnly />
+              <Input type="number" value={formData.quantity} onChange={(e) => setFormData((p) => ({ ...p, quantity: Number(e.target.value) || 0 }))} />
             </div>
             <div className="space-y-2">
               <Label>Закуп в тенге</Label>
-              <Input value={formatCurrency(record.purchase_price)} readOnly />
+              <Input type="number" value={formData.purchase_price} onChange={(e) => setFormData((p) => ({ ...p, purchase_price: Number(e.target.value) || 0 }))} />
             </div>
             <div className="space-y-2">
               <Label>Общая сумма доставки</Label>
-              <Input value={formatCurrency(record.total_delivery)} readOnly />
+              <Input type="number" value={formData.total_delivery} onChange={(e) => setFormData((p) => ({ ...p, total_delivery: Number(e.target.value) || 0 }))} />
             </div>
             <div className="space-y-2">
-              <Label>Цена продажи с бонусом клиента</Label>
-              <Input value={formatCurrency(record.selling_with_bonus)} readOnly />
+              <Label>Цена продажи</Label>
+              <Input type="number" value={formData.selling_with_bonus} onChange={(e) => setFormData((p) => ({ ...p, selling_with_bonus: Number(e.target.value) || 0 }))} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Общий бонус клиент</Label>
+              <Input type="number" value={formData.client_bonus} onChange={(e) => setFormData((p) => ({ ...p, client_bonus: Number(e.target.value) || 0 }))} />
             </div>
           </div>
 
@@ -172,6 +252,10 @@ export function RecordViewDialog({ open, onOpenChange, record }: RecordViewDialo
                 <Input value={formatCurrency(record.total_client_bonus_post_tax || 0)} readOnly />
               </div>
             </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Отмена</Button>
+            <Button onClick={handleSave} disabled={isSaving}>{isSaving ? "Сохранение..." : "Сохранить"}</Button>
           </div>
         </div>
       </DialogContent>

@@ -620,7 +620,7 @@ export default function AdminDashboard() {
           onSuccess={handleFormSuccess}
         />
 
-        <RecordViewDialog open={isViewOpen} onOpenChange={setIsViewOpen} record={selectedRecord} />
+        <RecordViewDialog open={isViewOpen} onOpenChange={setIsViewOpen} record={selectedRecord} onSuccess={handleFormSuccess} />
       </main>
     </div>
   )
