@@ -60,7 +60,7 @@ export default function AdminDashboard() {
 
   const loadRecords = async () => {
     // Для админа берём все записи через серверный API, чтобы обойти RLS
-    const res = await fetch("/api/admin/records", { cache: "no-store" })
+    const res = await fetch(`/api/admin/records?t=${Date.now()}`, { cache: "no-store" })
     if (res.ok) {
       const json = await res.json()
       if (Array.isArray(json.records)) setRecords(json.records)
