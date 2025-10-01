@@ -43,6 +43,7 @@ export default function AdminDashboard() {
   const [filterDateFrom, setFilterDateFrom] = useState("")
   const [filterDateTo, setFilterDateTo] = useState("")
   const [filterCounterparty, setFilterCounterparty] = useState("all")
+  const [counterpartyQuery, setCounterpartyQuery] = useState("")
   const [users, setUsers] = useState<{ id: string; email: string; name: string | null; role: string }[]>([])
   const [sortKey, setSortKey] = useState<
     | "date"
@@ -417,13 +418,22 @@ export default function AdminDashboard() {
                   </div>
                   <div className="space-y-2">
                     <Label>Контрагент</Label>
+                    <Input
+                      placeholder="Поиск контрагента"
+                      value={counterpartyQuery}
+                      onChange={(e) => setCounterpartyQuery(e.target.value)}
+                    />
                     <Select value={filterCounterparty} onValueChange={setFilterCounterparty}>
                       <SelectTrigger>
                         <SelectValue placeholder="Все контрагенты" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Все контрагенты</SelectItem>
-                        {Array.from(new Set(records.map((r) => r.counterparty || ""))).map((cp) => (
+                        {Array.from(new Set(records.map((r) => r.counterparty || "")))
+                          .filter((cp) =>
+                            (cp || "Не указан").toLowerCase().includes(counterpartyQuery.trim().toLowerCase())
+                          )
+                          .map((cp) => (
                           <SelectItem key={cp || "__empty__"} value={cp || "__empty__"}>
                             {(cp && cp.trim()) ? cp : "Не указан"}
                           </SelectItem>
