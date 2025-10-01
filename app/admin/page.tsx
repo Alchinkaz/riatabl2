@@ -210,7 +210,7 @@ export default function AdminDashboard() {
 
   const getMarginColor = (margin: number) => {
     if (margin >= 30) return "text-green-600 bg-green-50"
-    if (margin >= 20) return "text-yellow-600 bg-yellow-50"
+    if (margin >= 14) return "text-yellow-600 bg-yellow-50"
     return "text-red-600 bg-red-50"
   }
 
