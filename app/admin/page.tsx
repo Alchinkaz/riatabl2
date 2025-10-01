@@ -105,7 +105,7 @@ export default function AdminDashboard() {
     }
 
     setFilteredRecords(filtered)
-  }, [records, filterManager, filterMonth, filterDateFrom, filterDateTo])
+  }, [records, filterManager, filterMonth, filterDateFrom, filterDateTo, filterCounterparty])
 
   const handleCreateRecord = () => {
     setSelectedRecord(undefined)
