@@ -46,7 +46,7 @@ const DEFAULT_CUSTOM_FORMULAS: CustomFormulas = {
   total_expenses: "AB = AA + H + (D * J) + (D * S) + (D * O) + (D * U)",
   total_manager_bonuses: "AC = D * S",
   unit_bonus_client: "AD = AE / D",
-  total_client_bonus_post_tax: "AF = AE / (1 + налог/100)",
+  total_client_bonus_post_tax: "AF = AE * (1 - налог/100)",
 }
 
 interface FormulaSettingsContextType {

@@ -158,8 +158,8 @@ export function calculateSalesRecord(input: {
   // AC = D * S (Общая сумма бонусов менеджера)
   const AC = D * S
 
-  // AF = AE / 1.32 (Общий бонус клиент с вычетом налога)
-  const AF = AE / 1.32
+  // AF = AE * (1 - 32/100) (Общий бонус клиент с вычетом налога)
+  const AF = AE * (1 - 32 / 100)
 
   return {
     quantity: D,
