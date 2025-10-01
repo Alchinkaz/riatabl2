@@ -474,9 +474,9 @@ export default function AdminDashboard() {
                           <TableHead>Наименование</TableHead>
                           <TableHead>Кол-во</TableHead>
                           <TableHead>Закуп в тенге</TableHead>
-                          <TableHead>Общая доставка</TableHead>
-                          <TableHead>Цена с бонусом</TableHead>
-                          <TableHead>Чистый доход за ед.</TableHead>
+                          <TableHead>Общий бонус клиент с вычетом налога</TableHead>
+                          <TableHead>Цена продажи</TableHead>
+                          <TableHead>Сумма чистого дохода компании</TableHead>
                           <TableHead>Маржа %</TableHead>
                           <TableHead>Автор</TableHead>
                           <TableHead>Действия</TableHead>
@@ -501,11 +501,11 @@ export default function AdminDashboard() {
                             <TableCell>{record.name}</TableCell>
                             <TableCell>{record.quantity}</TableCell>
                             <TableCell>{formatCurrency(record.purchase_price)}</TableCell>
-                            <TableCell>{formatCurrency(record.total_delivery)}</TableCell>
+                            <TableCell>{formatCurrency(record.total_client_bonus_post_tax || 0)}</TableCell>
                             <TableCell>{formatCurrency(record.selling_with_bonus)}</TableCell>
                             <TableCell>
                               <Badge variant="secondary" className="text-red-600 bg-red-50">
-                                {formatCurrency(record.net_income_unit || 0)}
+                                {formatCurrency(record.total_net_income || 0)}
                               </Badge>
                             </TableCell>
                             <TableCell>
