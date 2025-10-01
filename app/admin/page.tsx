@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { CommandDialog, CommandInput, CommandList, CommandItem, CommandEmpty } from "@/components/ui/command"
 import { AdminRecordForm } from "@/components/admin/admin-record-form"
 import { FormulaEditor } from "@/components/admin/formula-editor"
 import { RecordViewDialog } from "@/components/admin/record-view"
@@ -20,7 +21,7 @@ import { recordStorage, type StoredRecord } from "@/lib/storage"
 // import { userStorage } from "@/lib/user-storage"
 import { supabase } from "@/lib/supabase"
 import { formatCurrency, formatPercent } from "@/lib/calculations"
-import { Plus, Edit, Trash2, Filter, Users, TrendingUp, DollarSign, Target, Calculator, Eye } from "lucide-react"
+import { Plus, Edit, Trash2, Filter, Users, TrendingUp, DollarSign, Target, Calculator, Eye, Search } from "lucide-react"
 import { format } from "date-fns"
 import { ru } from "date-fns/locale"
 import { useRouter } from "next/navigation"
@@ -43,7 +44,7 @@ export default function AdminDashboard() {
   const [filterDateFrom, setFilterDateFrom] = useState("")
   const [filterDateTo, setFilterDateTo] = useState("")
   const [filterCounterparty, setFilterCounterparty] = useState("all")
-  const [counterpartyQuery, setCounterpartyQuery] = useState("")
+  const [isCounterpartySearchOpen, setIsCounterpartySearchOpen] = useState(false)
   const [users, setUsers] = useState<{ id: string; email: string; name: string | null; role: string }[]>([])
   const [sortKey, setSortKey] = useState<
     | "date"
@@ -310,6 +311,10 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4 mr-2" />
               Пользователи
             </Button>
+            <Button variant="outline" onClick={() => setIsCounterpartySearchOpen(true)}>
+              <Search className="h-4 w-4 mr-2" />
+              Поиск
+            </Button>
           </div>
         </div>
 
@@ -418,11 +423,6 @@ export default function AdminDashboard() {
                   </div>
                   <div className="space-y-2">
                     <Label>Контрагент</Label>
-                    <Input
-                      placeholder="Поиск контрагента"
-                      value={counterpartyQuery}
-                      onChange={(e) => setCounterpartyQuery(e.target.value)}
-                    />
                     <Select value={filterCounterparty} onValueChange={setFilterCounterparty}>
                       <SelectTrigger>
                         <SelectValue placeholder="Все контрагенты" />
@@ -430,9 +430,6 @@ export default function AdminDashboard() {
                       <SelectContent>
                         <SelectItem value="all">Все контрагенты</SelectItem>
                         {Array.from(new Set(records.map((r) => r.counterparty || "")))
-                          .filter((cp) =>
-                            (cp || "Не указан").toLowerCase().includes(counterpartyQuery.trim().toLowerCase())
-                          )
                           .map((cp) => (
                           <SelectItem key={cp || "__empty__"} value={cp || "__empty__"}>
                             {(cp && cp.trim()) ? cp : "Не указан"}
@@ -630,7 +627,26 @@ export default function AdminDashboard() {
           onSuccess={handleFormSuccess}
         />
 
-        <RecordViewDialog open={isViewOpen} onOpenChange={setIsViewOpen} record={selectedRecord} onSuccess={handleFormSuccess} />
+      <RecordViewDialog open={isViewOpen} onOpenChange={setIsViewOpen} record={selectedRecord} onSuccess={handleFormSuccess} />
+
+      {/* Counterparty Search Dialog */}
+      <CommandDialog open={isCounterpartySearchOpen} onOpenChange={setIsCounterpartySearchOpen} title="Поиск контрагента">
+        <CommandInput placeholder="Введите название контрагента..." />
+        <CommandList>
+          <CommandEmpty>Ничего не найдено</CommandEmpty>
+          {Array.from(new Set(records.map((r) => r.counterparty || ""))).map((cp) => (
+            <CommandItem
+              key={cp || "__empty__"}
+              onSelect={() => {
+                setFilterCounterparty(cp || "__empty__")
+                setIsCounterpartySearchOpen(false)
+              }}
+            >
+              {(cp && cp.trim()) ? cp : "Не указан"}
+            </CommandItem>
+          ))}
+        </CommandList>
+      </CommandDialog>
       </main>
     </div>
   )
