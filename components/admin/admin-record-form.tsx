@@ -116,13 +116,27 @@ export function AdminRecordForm({ open, onOpenChange, record, onSuccess }: Admin
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!validateForm() || !calculations) return
+    if (!validateForm()) return
 
     setIsSubmitting(true)
     try {
+      const computed =
+        calculations ||
+        calculateSalesRecordWithSettings(
+          {
+            quantity: formData.quantity,
+            purchase_price: formData.purchase_price,
+            total_delivery: formData.total_delivery,
+            selling_with_bonus: formData.selling_with_bonus,
+            client_bonus: formData.client_bonus,
+          },
+          config,
+          customFormulas,
+        )
+
       const recordData = {
         ...formData,
-        ...calculations,
+        ...computed,
         date: formData.date,
         created_by: record?.created_by || "1",
       }
