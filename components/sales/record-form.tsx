@@ -109,8 +109,8 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
     if (!formData.counterparty || formData.counterparty.length < 2) {
       newErrors.counterparty = "Контрагент должен содержать минимум 2 символа"
     }
-    if (!formData.name || formData.name.length < 3) {
-      newErrors.name = "Наименование должно содержать минимум 3 символа"
+    if (!formData.name.trim()) {
+      newErrors.name = "Наименование обязательно"
     }
     if (qty <= 0) newErrors.quantity = "Количество должно быть больше 0"
     if (purchase < 0) newErrors.purchase_price = "Закупочная цена не может быть отрицательной"
