@@ -90,7 +90,11 @@ export default function AdminDashboard() {
     }
 
     if (filterCounterparty !== "all") {
-      filtered = filtered.filter((record) => record.counterparty === filterCounterparty)
+      if (filterCounterparty === "__empty__") {
+        filtered = filtered.filter((record) => !record.counterparty)
+      } else {
+        filtered = filtered.filter((record) => record.counterparty === filterCounterparty)
+      }
     }
 
     if (filterDateFrom) {
@@ -351,9 +355,9 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Все контрагенты</SelectItem>
-                        {Array.from(new Set(records.map((r) => r.counterparty))).map((cp) => (
-                          <SelectItem key={cp} value={cp}>
-                            {cp || "Не указан"}
+                        {Array.from(new Set(records.map((r) => r.counterparty || ""))).map((cp) => (
+                          <SelectItem key={cp || "__empty__"} value={cp || "__empty__"}>
+                            {(cp && cp.trim()) ? cp : "Не указан"}
                           </SelectItem>
                         ))}
                       </SelectContent>
