@@ -110,12 +110,26 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
     // Проверка ограничений даты для менеджеров
     if (user?.role === "manager" && formData.date) {
       const selectedDate = new Date(formData.date)
-      const currentDate = new Date()
+      let referenceDate: Date
       
-      // Проверяем, что выбранная дата в том же месяце и году, что и текущая
-      if (selectedDate.getMonth() !== currentDate.getMonth() || 
-          selectedDate.getFullYear() !== currentDate.getFullYear()) {
-        newErrors.date = "Менеджеры могут выбирать только дни текущего месяца"
+      if (record && record.date) {
+        // При редактировании - ограничиваем месяцем создания записи
+        referenceDate = new Date(record.date)
+      } else {
+        // При создании новой записи - ограничиваем текущим месяцем
+        referenceDate = new Date()
+      }
+      
+      // Проверяем, что выбранная дата в том же месяце и году, что и референсная дата
+      if (selectedDate.getMonth() !== referenceDate.getMonth() || 
+          selectedDate.getFullYear() !== referenceDate.getFullYear()) {
+        const monthNames = [
+          "января", "февраля", "марта", "апреля", "мая", "июня",
+          "июля", "августа", "сентября", "октября", "ноября", "декабря"
+        ]
+        const monthName = monthNames[referenceDate.getMonth()]
+        const year = referenceDate.getFullYear()
+        newErrors.date = `Менеджеры могут выбирать только дни ${monthName} ${year} года`
       }
     }
     
@@ -188,7 +202,12 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 <Calendar className="h-4 w-4" />
                 Дата
                 {user?.role === "manager" && (
-                  <span className="text-xs text-muted-foreground">(только текущий месяц)</span>
+                  <span className="text-xs text-muted-foreground">
+                    {record && record.date ? 
+                      `(только ${new Date(record.date).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })})` : 
+                      "(только текущий месяц)"
+                    }
+                  </span>
                 )}
               </Label>
               <Input
@@ -198,15 +217,25 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
                 className="border-yellow-500"
                 min={user?.role === "manager" ? (() => {
-                  const now = new Date()
-                  const year = now.getFullYear()
-                  const month = String(now.getMonth() + 1).padStart(2, '0')
+                  let referenceDate: Date
+                  if (record && record.date) {
+                    referenceDate = new Date(record.date)
+                  } else {
+                    referenceDate = new Date()
+                  }
+                  const year = referenceDate.getFullYear()
+                  const month = String(referenceDate.getMonth() + 1).padStart(2, '0')
                   return `${year}-${month}-01`
                 })() : undefined}
                 max={user?.role === "manager" ? (() => {
-                  const now = new Date()
-                  const year = now.getFullYear()
-                  const month = now.getMonth()
+                  let referenceDate: Date
+                  if (record && record.date) {
+                    referenceDate = new Date(record.date)
+                  } else {
+                    referenceDate = new Date()
+                  }
+                  const year = referenceDate.getFullYear()
+                  const month = referenceDate.getMonth()
                   const lastDay = new Date(year, month + 1, 0).getDate()
                   const monthStr = String(month + 1).padStart(2, '0')
                   return `${year}-${monthStr}-${String(lastDay).padStart(2, '0')}`
