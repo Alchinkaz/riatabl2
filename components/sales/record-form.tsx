@@ -106,6 +106,19 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
     const bonus = Number.parseFloat(formData.client_bonus) || 0
 
     if (!formData.date) newErrors.date = "Дата обязательна"
+    
+    // Проверка ограничений даты для менеджеров
+    if (user?.role === "manager" && formData.date) {
+      const selectedDate = new Date(formData.date)
+      const currentDate = new Date()
+      
+      // Проверяем, что выбранная дата в том же месяце и году, что и текущая
+      if (selectedDate.getMonth() !== currentDate.getMonth() || 
+          selectedDate.getFullYear() !== currentDate.getFullYear()) {
+        newErrors.date = "Менеджеры могут выбирать только дни текущего месяца"
+      }
+    }
+    
     if (!formData.counterparty || formData.counterparty.length < 2) {
       newErrors.counterparty = "Контрагент должен содержать минимум 2 символа"
     }
@@ -174,6 +187,9 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
               <Label htmlFor="date" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Дата
+                {user?.role === "manager" && (
+                  <span className="text-xs text-muted-foreground">(только текущий месяц)</span>
+                )}
               </Label>
               <Input
                 id="date"
@@ -181,6 +197,20 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                 value={formData.date}
                 onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
                 className="border-yellow-500"
+                min={user?.role === "manager" ? (() => {
+                  const now = new Date()
+                  const year = now.getFullYear()
+                  const month = String(now.getMonth() + 1).padStart(2, '0')
+                  return `${year}-${month}-01`
+                })() : undefined}
+                max={user?.role === "manager" ? (() => {
+                  const now = new Date()
+                  const year = now.getFullYear()
+                  const month = now.getMonth()
+                  const lastDay = new Date(year, month + 1, 0).getDate()
+                  const monthStr = String(month + 1).padStart(2, '0')
+                  return `${year}-${monthStr}-${String(lastDay).padStart(2, '0')}`
+                })() : undefined}
                 required
               />
               {errors.date && <p className="text-sm text-red-500">{errors.date}</p>}
