@@ -361,7 +361,7 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
           )}
 
           {/* Calculated Fields Preview */}
-          {calculations && !(user?.role === "manager" && !record) && (
+          {calculations && user?.role !== "manager" && (
             <Accordion type="single" collapsible defaultValue="calculations">
               <AccordionItem value="calculations">
                 <AccordionTrigger>Вычисляемые значения</AccordionTrigger>
