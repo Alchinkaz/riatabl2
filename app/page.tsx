@@ -5,7 +5,7 @@ import { LoginForm } from "@/components/login-form"
 import { Header } from "@/components/layout/header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Calculator, Users, BarChart3, Settings } from "lucide-react"
+import { Calculator, Users, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
 // DebugFormulaSettings removed in production UI
 
@@ -33,20 +33,7 @@ function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Аналитика
-              </CardTitle>
-              <CardDescription>Графики и отчеты по продажам</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full bg-transparent" onClick={() => router.push("/analytics")}>
-                Посмотреть отчеты
-              </Button>
-            </CardContent>
-          </Card>
+          
 
           {isAdmin && (
             <>
