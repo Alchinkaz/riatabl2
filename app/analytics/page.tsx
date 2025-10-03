@@ -128,15 +128,7 @@ export default function AnalyticsPage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <BarChart3 className="h-6 w-6" />
-            Аналитика продаж
-          </h1>
-          <p className="text-muted-foreground">
-            {isAdmin ? "Полная аналитика по всем пользователям и записям" : "Аналитика ваших продаж и результатов"}
-          </p>
-        </div>
+        
 
         {/* Удалены секции производительности и детальной статистики по пользователям */}
 
