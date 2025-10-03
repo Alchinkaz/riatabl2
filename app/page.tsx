@@ -33,7 +33,19 @@ function Dashboard() {
             </CardContent>
           </Card>
 
-          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Дашборды
+              </CardTitle>
+              <CardDescription>Сводные показатели и рейтинг менеджеров</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full bg-transparent" onClick={() => router.push("/dashboards")}>
+                Перейти к дашбордам
+              </Button>
+            </CardContent>
+          </Card>
 
           {isAdmin && (
             <>
