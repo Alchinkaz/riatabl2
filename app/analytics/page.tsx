@@ -95,7 +95,9 @@ export default function AnalyticsPage() {
     for (const r of filteredRecords) {
       const key = r.created_by || "unknown"
       const prev = map.get(key) || { total: 0, count: 0 }
-      map.set(key, { total: prev.total + (r.total_net_income || 0), count: prev.count + 1 })
+      // Считаем ОБЩУЮ СУММУ ПРОДАЖ вместо дохода
+      const salesTotal = r.total_selling_vat ?? 0
+      map.set(key, { total: prev.total + salesTotal, count: prev.count + 1 })
     }
     return Array.from(map.entries()).map(([userId, agg]) => ({ userId, ...agg }))
   })()
@@ -136,7 +138,96 @@ export default function AnalyticsPage() {
           </p>
         </div>
 
-        {/* Фильтры */}
+        {/* Производительность пользователей (вверх) */}
+        {isAdmin && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">Производительность пользователей</CardTitle>
+              <CardDescription>Общие суммы продаж по пользователям за выбранный период</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-muted-foreground">
+                      <th className="py-2">Имя</th>
+                      <th className="py-2">Записей</th>
+                      <th className="py-2">Сумма продаж</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {performanceByUser
+                      .sort((a, b) => b.total - a.total)
+                      .map((row) => {
+                        const u = users.find((uu) => uu.id === row.userId)
+                        const isBest = bestManager && bestManager.userId === row.userId
+                        return (
+                          <tr key={row.userId} className={isBest ? "bg-green-50" : ""}>
+                            <td className="py-2">
+                              <div className="flex items-center gap-2">
+                                {isBest && <Trophy className="h-4 w-4 text-green-600" />}
+                                <span>{u?.name || u?.email || row.userId}</span>
+                              </div>
+                            </td>
+                            <td className="py-2 w-24 text-right tabular-nums font-mono">{row.count}</td>
+                            <td className="py-2 w-48 text-right tabular-nums font-mono">
+                              {new Intl.NumberFormat("ru-KZ", { style: "currency", currency: "KZT", minimumFractionDigits: 2 }).format(row.total)}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Детальная статистика по пользователям (вверх) */}
+        {isAdmin && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Детальная статистика по пользователям</CardTitle>
+              <CardDescription>Подробная информация о производительности каждого пользователя</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-muted-foreground">
+                      <th className="py-2">Имя</th>
+                      <th className="py-2">Записей</th>
+                      <th className="py-2">Сумма продаж</th>
+                      <th className="py-2">Средняя маржа</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {performanceByUser.map((row) => {
+                      const u = users.find((uu) => uu.id === row.userId)
+                      const userRecs = filteredRecords.filter((r) => r.created_by === row.userId)
+                      const avgMargin =
+                        userRecs.length > 0
+                          ? userRecs.reduce((s, r) => s + (r.margin_percent || 0), 0) / userRecs.length
+                          : 0
+                      return (
+                        <tr key={row.userId}>
+                          <td className="py-2">{u?.name || u?.email || row.userId}</td>
+                          <td className="py-2 w-24 text-right tabular-nums font-mono">{row.count}</td>
+                          <td className="py-2 w-48 text-right tabular-nums font-mono">
+                            {new Intl.NumberFormat("ru-KZ", { style: "currency", currency: "KZT", minimumFractionDigits: 2 }).format(row.total)}
+                          </td>
+                          <td className="py-2 w-32 text-right tabular-nums font-mono">{avgMargin.toFixed(2)}%</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Фильтры (ниже сводных секций) */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Фильтры</CardTitle>
