@@ -41,7 +41,24 @@ export default function AnalyticsPage() {
         }
         if (!active) return
         setRecords(recs)
-        setUsers(userStorage.getAll())
+        // Подтягиваем имена пользователей для отображения в таблице
+        if (isAdmin) {
+          try {
+            const ures = await fetch("/api/admin/users", { cache: "no-store" })
+            if (ures.ok) {
+              const j = await ures.json()
+              if (Array.isArray(j.users)) setUsers(j.users)
+              else setUsers(userStorage.getAll())
+            } else {
+              setUsers(userStorage.getAll())
+            }
+          } catch {
+            setUsers(userStorage.getAll())
+          }
+        } else {
+          // Для менеджера показываем только его данные
+          setUsers(userStorage.getAll().filter((u) => u.id === user.id))
+        }
       } finally {
         if (!active) return
         setIsLoading(false)
@@ -182,7 +199,7 @@ export default function AnalyticsPage() {
           </Card>
         ) : (
           <>
-            <SalesCharts records={filteredRecords} users={users} />
+            <SalesCharts key={`${filterMonth}-${dateFrom}-${dateTo}`} records={filteredRecords} users={users} />
 
             {/* Производительность пользователей */}
             {isAdmin && (
@@ -196,7 +213,7 @@ export default function AnalyticsPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-left text-muted-foreground">
-                          <th className="py-2">Пользователь</th>
+                          <th className="py-2">Имя</th>
                           <th className="py-2">Записей</th>
                           <th className="py-2">Общий доход</th>
                         </tr>
