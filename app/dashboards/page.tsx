@@ -9,6 +9,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { formatCurrency, formatPercent } from "@/lib/calculations"
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+} from "recharts"
 
 export default function DashboardsPage() {
   const { user, isAdmin } = useAuth()
@@ -120,6 +132,34 @@ export default function DashboardsPage() {
       map.set(key, { sales: prev.sales + salesTotal, count: prev.count + 1 })
     }
     return Array.from(map.entries()).map(([userId, agg]) => ({ userId, ...agg }))
+  }, [filtered])
+
+  // Monthly aggregates for charts
+  const monthlyData = useMemo(() => {
+    const map = new Map<string, { label: string; sales: number; expenses: number; marginPctSum: number; marginCount: number }>()
+    for (const r of filtered) {
+      const d = r.date ? new Date(r.date) : null
+      if (!d || isNaN(d.getTime())) continue
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+      const label = d.toLocaleString("ru-RU", { month: "short", year: "numeric" })
+      const prev = map.get(key) || { label, sales: 0, expenses: 0, marginPctSum: 0, marginCount: 0 }
+      prev.sales += r.total_selling_vat || 0
+      prev.expenses += r.total_expenses || 0
+      if (typeof r.margin_percent === "number") {
+        prev.marginPctSum += r.margin_percent
+        prev.marginCount += 1
+      }
+      map.set(key, prev)
+    }
+    const result = Array.from(map.entries())
+      .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+      .map(([, v]) => ({
+        label: v.label,
+        sales: v.sales,
+        expenses: v.expenses,
+        margin: v.marginCount > 0 ? v.marginPctSum / v.marginCount : 0,
+      }))
+    return result
   }, [filtered])
 
   if (!user) {
@@ -282,6 +322,51 @@ export default function DashboardsPage() {
                 </div>
               </CardContent>
             </Card>
+
+            <div className="grid gap-6 md:grid-cols-2 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Продажи vs Расходы по месяцам</CardTitle>
+                  <CardDescription>Суммы за каждый месяц</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div style={{ width: "100%", height: 300 }}>
+                    <ResponsiveContainer>
+                      <BarChart data={monthlyData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="label" />
+                        <YAxis />
+                        <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                        <Legend />
+                        <Bar dataKey="sales" name="Продажи" fill="#16a34a" />
+                        <Bar dataKey="expenses" name="Расходы" fill="#ef4444" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Средняя маржа по месяцам</CardTitle>
+                  <CardDescription>Маржа в процентах</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div style={{ width: "100%", height: 300 }}>
+                    <ResponsiveContainer>
+                      <LineChart data={monthlyData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="label" />
+                        <YAxis />
+                        <Tooltip formatter={(v: number) => formatPercent(v)} />
+                        <Legend />
+                        <Line type="monotone" dataKey="margin" name="Маржа" stroke="#0ea5e9" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </>
         )}
       </main>
