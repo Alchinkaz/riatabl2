@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -14,6 +14,7 @@ export interface ColumnConfig {
   description?: string
   visible: boolean
   required?: boolean
+  order?: number
 }
 
 interface ColumnVisibilityControlProps {
@@ -23,6 +24,48 @@ interface ColumnVisibilityControlProps {
 
 export function ColumnVisibilityControl({ columns, onColumnsChange }: ColumnVisibilityControlProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const hasLoaded = useRef(false)
+
+  // Загружаем сохраненные настройки колонок при монтировании
+  useEffect(() => {
+    if (hasLoaded.current) return
+    
+    const savedColumns = localStorage.getItem('admin-column-visibility')
+    if (savedColumns) {
+      try {
+        const parsedColumns = JSON.parse(savedColumns)
+        // Обновляем видимость и порядок, сохраняя обязательные колонки
+        const updatedColumns = columns.map(col => {
+          const savedCol = parsedColumns.find((s: ColumnConfig) => s.key === col.key)
+          return savedCol ? { ...col, visible: savedCol.visible, order: savedCol.order } : col
+        })
+        
+        // Сортируем колонки по порядку
+        const sortedColumns = updatedColumns.sort((a, b) => {
+          if (a.required && !b.required) return -1
+          if (!a.required && b.required) return 1
+          if (a.required && b.required) return 0
+          
+          const orderA = a.order || 999
+          const orderB = b.order || 999
+          return orderA - orderB
+        })
+        
+        onColumnsChange(sortedColumns)
+        hasLoaded.current = true
+      } catch (error) {
+        console.error('Ошибка загрузки настроек колонок:', error)
+        hasLoaded.current = true
+      }
+    } else {
+      hasLoaded.current = true
+    }
+  }, [columns, onColumnsChange])
+
+  // Сохраняем настройки при изменении
+  useEffect(() => {
+    localStorage.setItem('admin-column-visibility', JSON.stringify(columns))
+  }, [columns])
 
   const handleColumnToggle = (key: string, visible: boolean) => {
     // Не позволяем скрывать обязательные колонки
@@ -31,18 +74,62 @@ export function ColumnVisibilityControl({ columns, onColumnsChange }: ColumnVisi
       return
     }
     
-    const updatedColumns = columns.map(col => 
+    let updatedColumns = columns.map(col => 
       col.key === key ? { ...col, visible } : col
     )
+
+    // Если колонка становится видимой, добавляем ей порядок
+    if (visible && !column?.required) {
+      const maxOrder = Math.max(...updatedColumns.filter(col => col.visible && col.order !== undefined).map(col => col.order || 0), 0)
+      updatedColumns = updatedColumns.map(col => 
+        col.key === key ? { ...col, visible, order: maxOrder + 1 } : col
+      )
+    }
+
+    // Сортируем колонки по порядку (обязательные сначала, затем по order)
+    updatedColumns = updatedColumns.sort((a, b) => {
+      if (a.required && !b.required) return -1
+      if (!a.required && b.required) return 1
+      if (a.required && b.required) return 0
+      
+      const orderA = a.order || 999
+      const orderB = b.order || 999
+      return orderA - orderB
+    })
+
     onColumnsChange(updatedColumns)
   }
 
   const handleSelectAll = () => {
     const nonRequiredColumns = columns.filter(col => !col.required)
     const allNonRequiredVisible = nonRequiredColumns.every(col => col.visible)
-    const updatedColumns = columns.map(col => 
+    
+    let updatedColumns = columns.map(col => 
       col.required ? col : { ...col, visible: !allNonRequiredVisible }
     )
+
+    // Если показываем все, добавляем порядок для необязательных колонок
+    if (!allNonRequiredVisible) {
+      let orderCounter = 1
+      updatedColumns = updatedColumns.map(col => {
+        if (!col.required && col.visible) {
+          return { ...col, order: orderCounter++ }
+        }
+        return col
+      })
+    }
+
+    // Сортируем колонки по порядку
+    updatedColumns = updatedColumns.sort((a, b) => {
+      if (a.required && !b.required) return -1
+      if (!a.required && b.required) return 1
+      if (a.required && b.required) return 0
+      
+      const orderA = a.order || 999
+      const orderB = b.order || 999
+      return orderA - orderB
+    })
+
     onColumnsChange(updatedColumns)
   }
 
