@@ -13,6 +13,7 @@ export interface ColumnConfig {
   label: string
   description?: string
   visible: boolean
+  required?: boolean
 }
 
 interface ColumnVisibilityControlProps {
@@ -24,6 +25,12 @@ export function ColumnVisibilityControl({ columns, onColumnsChange }: ColumnVisi
   const [isOpen, setIsOpen] = useState(false)
 
   const handleColumnToggle = (key: string, visible: boolean) => {
+    // Не позволяем скрывать обязательные колонки
+    const column = columns.find(col => col.key === key)
+    if (column?.required && !visible) {
+      return
+    }
+    
     const updatedColumns = columns.map(col => 
       col.key === key ? { ...col, visible } : col
     )
@@ -31,8 +38,11 @@ export function ColumnVisibilityControl({ columns, onColumnsChange }: ColumnVisi
   }
 
   const handleSelectAll = () => {
-    const allVisible = columns.every(col => col.visible)
-    const updatedColumns = columns.map(col => ({ ...col, visible: !allVisible }))
+    const nonRequiredColumns = columns.filter(col => !col.required)
+    const allNonRequiredVisible = nonRequiredColumns.every(col => col.visible)
+    const updatedColumns = columns.map(col => 
+      col.required ? col : { ...col, visible: !allNonRequiredVisible }
+    )
     onColumnsChange(updatedColumns)
   }
 
@@ -86,6 +96,7 @@ export function ColumnVisibilityControl({ columns, onColumnsChange }: ColumnVisi
                   <Checkbox
                     id={column.key}
                     checked={column.visible}
+                    disabled={column.required}
                     onCheckedChange={(checked) => 
                       handleColumnToggle(column.key, checked as boolean)
                     }
@@ -94,9 +105,10 @@ export function ColumnVisibilityControl({ columns, onColumnsChange }: ColumnVisi
                   <div className="space-y-1 flex-1">
                     <Label
                       htmlFor={column.key}
-                      className="text-sm font-medium cursor-pointer"
+                      className={`text-sm font-medium cursor-pointer ${column.required ? 'text-muted-foreground' : ''}`}
                     >
                       {column.label}
+                      {column.required && <span className="text-xs text-muted-foreground ml-1">(обязательно)</span>}
                     </Label>
                     {column.description && (
                       <p className="text-xs text-muted-foreground">

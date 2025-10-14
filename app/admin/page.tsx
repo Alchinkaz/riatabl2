@@ -51,16 +51,46 @@ export default function AdminDashboard() {
   
   // Состояние для управления видимостью колонок
   const [columns, setColumns] = useState<ColumnConfig[]>([
-    { key: "date", label: "Дата", description: "Дата записи", visible: true },
-    { key: "counterparty", label: "Контрагент", description: "Название контрагента", visible: true },
+    // Обязательные колонки (нельзя скрыть)
+    { key: "date", label: "Дата", description: "Дата записи", visible: true, required: true },
+    { key: "counterparty", label: "Контрагент", description: "Название контрагента", visible: true, required: true },
+    { key: "author", label: "Автор", description: "Автор записи", visible: true, required: true },
+    
+    // Основные поля
     { key: "name", label: "Наименование", description: "Наименование товара", visible: true },
     { key: "quantity", label: "Кол-во", description: "Количество единиц", visible: true },
     { key: "purchase_price", label: "Закуп в тенге", description: "Цена закупки", visible: true },
-    { key: "total_client_bonus_post_tax", label: "Бонус клиента", description: "Бонус клиента после налогов", visible: true },
+    { key: "total_delivery", label: "Общая сумма доставки", description: "Общая сумма доставки", visible: false },
     { key: "selling_with_bonus", label: "Цена продажи", description: "Цена продажи с бонусом", visible: true },
-    { key: "total_net_income", label: "Сумма дохода", description: "Общая сумма чистого дохода", visible: true },
+    { key: "client_bonus", label: "Общий бонус клиент", description: "Общий бонус клиента", visible: false },
+    
+    // Расчетные поля
+    { key: "delivery_per_unit", label: "Дост-в за ед", description: "Доставка за единицу", visible: false },
+    { key: "sum_with_delivery", label: "Сумма за ед. с доставкой", description: "Сумма за единицу с доставкой", visible: false },
+    { key: "financial_load_percent", label: "Финансовая нагрузка %", description: "Процент финансовой нагрузки", visible: false },
+    { key: "financial_load", label: "Финансовая нагрузка", description: "Финансовая нагрузка в тенге", visible: false },
+    { key: "sum_with_load", label: "Сумма с нагрузкой", description: "Сумма за единицу с доставкой и фин. нагрузкой", visible: false },
+    { key: "markup_percent", label: "% накрутки", description: "Процент накрутки", visible: false },
+    { key: "markup", label: "Накрутка", description: "Накрутка в тенге", visible: false },
+    { key: "selling_price_no_vat", label: "Цена без НДС", description: "Цена продажи без НДС", visible: false },
+    { key: "nds_tax", label: "НДС", description: "Налоги НДС", visible: false },
+    { key: "selling_price_vat", label: "Цена с НДС", description: "Цена продажи с НДС", visible: false },
+    { key: "manager_bonus_percent", label: "% менеджера", description: "Процент бонуса менеджера", visible: false },
+    { key: "manager_bonus_unit", label: "Бонус менеджера за ед.", description: "Бонус менеджера за единицу", visible: false },
+    { key: "income_pre_kpn", label: "Доход без КПН", description: "Доход с единицы без вычета КПН", visible: false },
+    { key: "kpn_tax", label: "КПН", description: "Налоги КПН", visible: false },
+    { key: "net_income_unit", label: "Чистый доход за ед.", description: "Чистый доход за единицу", visible: false },
     { key: "margin_percent", label: "Маржа %", description: "Процент маржи", visible: true },
-    { key: "author", label: "Автор", description: "Автор записи", visible: true },
+    
+    // Общие суммы
+    { key: "total_selling_vat", label: "Общая сумма с НДС", description: "Общая сумма продажи с НДС", visible: false },
+    { key: "total_selling_bonus", label: "Общая сумма с бонусом", description: "Общая сумма продажи с НДС с учетом бонуса клиента", visible: false },
+    { key: "total_net_income", label: "Сумма дохода", description: "Общая сумма чистого дохода", visible: true },
+    { key: "total_purchase", label: "Общая сумма закупа", description: "Общая сумма закупа товара", visible: false },
+    { key: "total_expenses", label: "Общие расходы", description: "Сумма общих расходов", visible: false },
+    { key: "total_manager_bonuses", label: "Бонусы менеджера", description: "Общая сумма бонусов менеджера", visible: false },
+    { key: "unit_bonus_client", label: "Бонус за ед", description: "Бонус клиента за единицу", visible: false },
+    { key: "total_client_bonus_post_tax", label: "Бонус клиента", description: "Общий бонус клиента с вычетом налога", visible: true },
   ])
   
   const [sortKey, setSortKey] = useState<
@@ -324,7 +354,6 @@ export default function AdminDashboard() {
             <p className="text-muted-foreground">Управление всеми записями и пользователями</p>
           </div>
           <div className="flex gap-2">
-            <ColumnVisibilityControl columns={columns} onColumnsChange={setColumns} />
             <Button variant="outline" onClick={() => router.push("/admin/users")}>
               <Users className="h-4 w-4 mr-2" />
               Пользователи
@@ -444,21 +473,8 @@ export default function AdminDashboard() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Контрагент</Label>
-                    <Select value={filterCounterparty} onValueChange={setFilterCounterparty}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Все контрагенты" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Все контрагенты</SelectItem>
-                        {Array.from(new Set(records.map((r) => r.counterparty || "")))
-                          .map((cp) => (
-                          <SelectItem key={cp || "__empty__"} value={cp || "__empty__"}>
-                            {(cp && cp.trim()) ? cp : "Не указан"}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Колонки</Label>
+                    <ColumnVisibilityControl columns={columns} onColumnsChange={setColumns} />
                   </div>
                   
                   <div className="space-y-2">
@@ -596,6 +612,75 @@ export default function AdminDashboard() {
                           {columns.find(col => col.key === "author")?.visible && (
                             <TableHead className="cursor-pointer" onClick={() => handleSort("author")}>Автор</TableHead>
                           )}
+                          {columns.find(col => col.key === "total_delivery")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("total_delivery")}>Общая сумма доставки</TableHead>
+                          )}
+                          {columns.find(col => col.key === "client_bonus")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("client_bonus")}>Общий бонус клиент</TableHead>
+                          )}
+                          {columns.find(col => col.key === "delivery_per_unit")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("delivery_per_unit")}>Дост-в за ед</TableHead>
+                          )}
+                          {columns.find(col => col.key === "sum_with_delivery")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("sum_with_delivery")}>Сумма за ед. с доставкой</TableHead>
+                          )}
+                          {columns.find(col => col.key === "financial_load_percent")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("financial_load_percent")}>Финансовая нагрузка %</TableHead>
+                          )}
+                          {columns.find(col => col.key === "financial_load")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("financial_load")}>Финансовая нагрузка</TableHead>
+                          )}
+                          {columns.find(col => col.key === "sum_with_load")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("sum_with_load")}>Сумма с нагрузкой</TableHead>
+                          )}
+                          {columns.find(col => col.key === "markup_percent")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("markup_percent")}>% накрутки</TableHead>
+                          )}
+                          {columns.find(col => col.key === "markup")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("markup")}>Накрутка</TableHead>
+                          )}
+                          {columns.find(col => col.key === "selling_price_no_vat")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("selling_price_no_vat")}>Цена без НДС</TableHead>
+                          )}
+                          {columns.find(col => col.key === "nds_tax")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("nds_tax")}>НДС</TableHead>
+                          )}
+                          {columns.find(col => col.key === "selling_price_vat")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("selling_price_vat")}>Цена с НДС</TableHead>
+                          )}
+                          {columns.find(col => col.key === "manager_bonus_percent")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("manager_bonus_percent")}>% менеджера</TableHead>
+                          )}
+                          {columns.find(col => col.key === "manager_bonus_unit")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("manager_bonus_unit")}>Бонус менеджера за ед.</TableHead>
+                          )}
+                          {columns.find(col => col.key === "income_pre_kpn")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("income_pre_kpn")}>Доход без КПН</TableHead>
+                          )}
+                          {columns.find(col => col.key === "kpn_tax")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("kpn_tax")}>КПН</TableHead>
+                          )}
+                          {columns.find(col => col.key === "net_income_unit")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("net_income_unit")}>Чистый доход за ед.</TableHead>
+                          )}
+                          {columns.find(col => col.key === "total_selling_vat")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("total_selling_vat")}>Общая сумма с НДС</TableHead>
+                          )}
+                          {columns.find(col => col.key === "total_selling_bonus")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("total_selling_bonus")}>Общая сумма с бонусом</TableHead>
+                          )}
+                          {columns.find(col => col.key === "total_purchase")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("total_purchase")}>Общая сумма закупа</TableHead>
+                          )}
+                          {columns.find(col => col.key === "total_expenses")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("total_expenses")}>Общие расходы</TableHead>
+                          )}
+                          {columns.find(col => col.key === "total_manager_bonuses")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("total_manager_bonuses")}>Бонусы менеджера</TableHead>
+                          )}
+                          {columns.find(col => col.key === "unit_bonus_client")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("unit_bonus_client")}>Бонус за ед</TableHead>
+                          )}
                           <TableHead>Действия</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -650,6 +735,75 @@ export default function AdminDashboard() {
                             )}
                             {columns.find(col => col.key === "author")?.visible && (
                               <TableCell>{getUserName(record.created_by)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "total_delivery")?.visible && (
+                              <TableCell>{formatCurrency(record.total_delivery || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "client_bonus")?.visible && (
+                              <TableCell>{formatCurrency(record.client_bonus || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "delivery_per_unit")?.visible && (
+                              <TableCell>{formatCurrency(record.delivery_per_unit || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "sum_with_delivery")?.visible && (
+                              <TableCell>{formatCurrency(record.sum_with_delivery || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "financial_load_percent")?.visible && (
+                              <TableCell>{formatPercent(record.financial_load_percent || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "financial_load")?.visible && (
+                              <TableCell>{formatCurrency(record.financial_load || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "sum_with_load")?.visible && (
+                              <TableCell>{formatCurrency(record.sum_with_load || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "markup_percent")?.visible && (
+                              <TableCell>{formatPercent(record.markup_percent || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "markup")?.visible && (
+                              <TableCell>{formatCurrency(record.markup || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "selling_price_no_vat")?.visible && (
+                              <TableCell>{formatCurrency(record.selling_price_no_vat || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "nds_tax")?.visible && (
+                              <TableCell>{formatCurrency(record.nds_tax || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "selling_price_vat")?.visible && (
+                              <TableCell>{formatCurrency(record.selling_price_vat || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "manager_bonus_percent")?.visible && (
+                              <TableCell>{formatPercent(record.manager_bonus_percent || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "manager_bonus_unit")?.visible && (
+                              <TableCell>{formatCurrency(record.manager_bonus_unit || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "income_pre_kpn")?.visible && (
+                              <TableCell>{formatCurrency(record.income_pre_kpn || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "kpn_tax")?.visible && (
+                              <TableCell>{formatCurrency(record.kpn_tax || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "net_income_unit")?.visible && (
+                              <TableCell>{formatCurrency(record.net_income_unit || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "total_selling_vat")?.visible && (
+                              <TableCell>{formatCurrency(record.total_selling_vat || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "total_selling_bonus")?.visible && (
+                              <TableCell>{formatCurrency(record.total_selling_bonus || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "total_purchase")?.visible && (
+                              <TableCell>{formatCurrency(record.total_purchase || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "total_expenses")?.visible && (
+                              <TableCell>{formatCurrency(record.total_expenses || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "total_manager_bonuses")?.visible && (
+                              <TableCell>{formatCurrency(record.total_manager_bonuses || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "unit_bonus_client")?.visible && (
+                              <TableCell>{formatCurrency(record.unit_bonus_client || 0)}</TableCell>
                             )}
                             <TableCell>
                               <div className="flex items-center gap-2">
