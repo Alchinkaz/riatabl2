@@ -16,6 +16,7 @@ import { AdminRecordForm } from "@/components/admin/admin-record-form"
 import { FormulaEditor } from "@/components/admin/formula-editor"
 import { RecordViewDialog } from "@/components/admin/record-view"
 import { MigrationPanel } from "@/components/admin/migration-panel"
+import { ColumnVisibilityControl, ColumnConfig } from "@/components/admin/column-visibility-control"
 import { useFormulaSettings } from "@/contexts/formula-settings-context"
 import { calculateSalesRecordWithSettings } from "@/lib/calculations-with-settings"
 import { recordStorage, type StoredRecord } from "@/lib/storage"
@@ -47,6 +48,21 @@ export default function AdminDashboard() {
   const [filterCounterparty, setFilterCounterparty] = useState("all")
   const [isCounterpartySearchOpen, setIsCounterpartySearchOpen] = useState(false)
   const [users, setUsers] = useState<{ id: string; email: string; name: string | null; role: string }[]>([])
+  
+  // Состояние для управления видимостью колонок
+  const [columns, setColumns] = useState<ColumnConfig[]>([
+    { key: "date", label: "Дата", description: "Дата записи", visible: true },
+    { key: "counterparty", label: "Контрагент", description: "Название контрагента", visible: true },
+    { key: "name", label: "Наименование", description: "Наименование товара", visible: true },
+    { key: "quantity", label: "Кол-во", description: "Количество единиц", visible: true },
+    { key: "purchase_price", label: "Закуп в тенге", description: "Цена закупки", visible: true },
+    { key: "total_client_bonus_post_tax", label: "Бонус клиента", description: "Бонус клиента после налогов", visible: true },
+    { key: "selling_with_bonus", label: "Цена продажи", description: "Цена продажи с бонусом", visible: true },
+    { key: "total_net_income", label: "Сумма дохода", description: "Общая сумма чистого дохода", visible: true },
+    { key: "margin_percent", label: "Маржа %", description: "Процент маржи", visible: true },
+    { key: "author", label: "Автор", description: "Автор записи", visible: true },
+  ])
+  
   const [sortKey, setSortKey] = useState<
     | "date"
     | "counterparty"
@@ -308,6 +324,7 @@ export default function AdminDashboard() {
             <p className="text-muted-foreground">Управление всеми записями и пользователями</p>
           </div>
           <div className="flex gap-2">
+            <ColumnVisibilityControl columns={columns} onColumnsChange={setColumns} />
             <Button variant="outline" onClick={() => router.push("/admin/users")}>
               <Users className="h-4 w-4 mr-2" />
               Пользователи
@@ -549,16 +566,36 @@ export default function AdminDashboard() {
                               onChange={(e) => selectAllFiltered(e.target.checked)}
                             />
                           </TableHead>
-                          <TableHead className="cursor-pointer" onClick={() => handleSort("date")}>Дата</TableHead>
-                          <TableHead className="cursor-pointer" onClick={() => handleSort("counterparty")}>Контрагент</TableHead>
-                          <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>Наименование</TableHead>
-                          <TableHead className="cursor-pointer" onClick={() => handleSort("quantity")}>Кол-во</TableHead>
-                          <TableHead className="cursor-pointer" onClick={() => handleSort("purchase_price")}>Закуп в тенге</TableHead>
-                          <TableHead className="cursor-pointer" onClick={() => handleSort("total_client_bonus_post_tax")}>Бонус клиента</TableHead>
-                          <TableHead className="cursor-pointer" onClick={() => handleSort("selling_with_bonus")}>Цена продажи</TableHead>
-                          <TableHead className="cursor-pointer" onClick={() => handleSort("total_net_income")}>Сумма дохода</TableHead>
-                          <TableHead className="cursor-pointer" onClick={() => handleSort("margin_percent")}>Маржа %</TableHead>
-                          <TableHead className="cursor-pointer" onClick={() => handleSort("author")}>Автор</TableHead>
+                          {columns.find(col => col.key === "date")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("date")}>Дата</TableHead>
+                          )}
+                          {columns.find(col => col.key === "counterparty")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("counterparty")}>Контрагент</TableHead>
+                          )}
+                          {columns.find(col => col.key === "name")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>Наименование</TableHead>
+                          )}
+                          {columns.find(col => col.key === "quantity")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("quantity")}>Кол-во</TableHead>
+                          )}
+                          {columns.find(col => col.key === "purchase_price")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("purchase_price")}>Закуп в тенге</TableHead>
+                          )}
+                          {columns.find(col => col.key === "total_client_bonus_post_tax")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("total_client_bonus_post_tax")}>Бонус клиента</TableHead>
+                          )}
+                          {columns.find(col => col.key === "selling_with_bonus")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("selling_with_bonus")}>Цена продажи</TableHead>
+                          )}
+                          {columns.find(col => col.key === "total_net_income")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("total_net_income")}>Сумма дохода</TableHead>
+                          )}
+                          {columns.find(col => col.key === "margin_percent")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("margin_percent")}>Маржа %</TableHead>
+                          )}
+                          {columns.find(col => col.key === "author")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("author")}>Автор</TableHead>
+                          )}
                           <TableHead>Действия</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -572,28 +609,48 @@ export default function AdminDashboard() {
                                 onChange={() => toggleSelect(record.id)}
                               />
                             </TableCell>
-                            <TableCell>
-                              {record.date && !isNaN(new Date(record.date).getTime())
-                                ? format(new Date(record.date), "dd.MM.yyyy", { locale: ru })
-                                : "Не указана"}
-                            </TableCell>
-                            <TableCell className="font-medium">{record.counterparty}</TableCell>
-                            <TableCell>{record.name}</TableCell>
-                            <TableCell>{record.quantity}</TableCell>
-                            <TableCell>{formatCurrency(record.purchase_price)}</TableCell>
-                            <TableCell>{formatCurrency(record.total_client_bonus_post_tax || 0)}</TableCell>
-                            <TableCell>{formatCurrency(record.selling_with_bonus)}</TableCell>
-                            <TableCell>
-                              <Badge variant="secondary" className="text-red-600 bg-red-50">
-                                {formatCurrency(record.total_net_income || 0)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary" className={getMarginColor(record.margin_percent || 0)}>
-                                {formatPercent(record.margin_percent || 0)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{getUserName(record.created_by)}</TableCell>
+                            {columns.find(col => col.key === "date")?.visible && (
+                              <TableCell>
+                                {record.date && !isNaN(new Date(record.date).getTime())
+                                  ? format(new Date(record.date), "dd.MM.yyyy", { locale: ru })
+                                  : "Не указана"}
+                              </TableCell>
+                            )}
+                            {columns.find(col => col.key === "counterparty")?.visible && (
+                              <TableCell className="font-medium">{record.counterparty}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "name")?.visible && (
+                              <TableCell>{record.name}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "quantity")?.visible && (
+                              <TableCell>{record.quantity}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "purchase_price")?.visible && (
+                              <TableCell>{formatCurrency(record.purchase_price)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "total_client_bonus_post_tax")?.visible && (
+                              <TableCell>{formatCurrency(record.total_client_bonus_post_tax || 0)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "selling_with_bonus")?.visible && (
+                              <TableCell>{formatCurrency(record.selling_with_bonus)}</TableCell>
+                            )}
+                            {columns.find(col => col.key === "total_net_income")?.visible && (
+                              <TableCell>
+                                <Badge variant="secondary" className="text-red-600 bg-red-50">
+                                  {formatCurrency(record.total_net_income || 0)}
+                                </Badge>
+                              </TableCell>
+                            )}
+                            {columns.find(col => col.key === "margin_percent")?.visible && (
+                              <TableCell>
+                                <Badge variant="secondary" className={getMarginColor(record.margin_percent || 0)}>
+                                  {formatPercent(record.margin_percent || 0)}
+                                </Badge>
+                              </TableCell>
+                            )}
+                            {columns.find(col => col.key === "author")?.visible && (
+                              <TableCell>{getUserName(record.created_by)}</TableCell>
+                            )}
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <Button variant="ghost" size="sm" onClick={() => handleViewRecord(record)}>
