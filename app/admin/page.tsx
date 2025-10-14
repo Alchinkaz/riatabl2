@@ -51,10 +51,10 @@ export default function AdminDashboard() {
   
   // Состояние для управления видимостью колонок
   const [columns, setColumns] = useState<ColumnConfig[]>([
-    // Обязательные колонки (нельзя скрыть)
+    // Обязательные колонки (нельзя скрыть) - Автор первым
+    { key: "author", label: "Автор", description: "Автор записи", visible: true, required: true },
     { key: "date", label: "Дата", description: "Дата записи", visible: true, required: true },
     { key: "counterparty", label: "Контрагент", description: "Название контрагента", visible: true, required: true },
-    { key: "author", label: "Автор", description: "Автор записи", visible: true, required: true },
     
     // Основные поля
     { key: "name", label: "Наименование", description: "Наименование товара", visible: true },
@@ -94,16 +94,39 @@ export default function AdminDashboard() {
   ])
   
   const [sortKey, setSortKey] = useState<
+    | "author"
     | "date"
     | "counterparty"
     | "name"
     | "quantity"
     | "purchase_price"
-    | "total_client_bonus_post_tax"
+    | "total_delivery"
     | "selling_with_bonus"
-    | "total_net_income"
+    | "client_bonus"
+    | "delivery_per_unit"
+    | "sum_with_delivery"
+    | "financial_load_percent"
+    | "financial_load"
+    | "sum_with_load"
+    | "markup_percent"
+    | "markup"
+    | "selling_price_no_vat"
+    | "nds_tax"
+    | "selling_price_vat"
+    | "manager_bonus_percent"
+    | "manager_bonus_unit"
+    | "income_pre_kpn"
+    | "kpn_tax"
+    | "net_income_unit"
     | "margin_percent"
-    | "author"
+    | "total_selling_vat"
+    | "total_selling_bonus"
+    | "total_net_income"
+    | "total_purchase"
+    | "total_expenses"
+    | "total_manager_bonuses"
+    | "unit_bonus_client"
+    | "total_client_bonus_post_tax"
   >("date")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
 
@@ -295,6 +318,8 @@ export default function AdminDashboard() {
 
   const getSortableValue = (record: StoredRecord, key: typeof sortKey): string | number => {
     switch (key) {
+      case "author":
+        return (getUserName(record.created_by) || "").toLowerCase()
       case "date":
         return record.date ? new Date(record.date).getTime() : 0
       case "counterparty":
@@ -305,16 +330,60 @@ export default function AdminDashboard() {
         return record.quantity || 0
       case "purchase_price":
         return record.purchase_price || 0
-      case "total_client_bonus_post_tax":
-        return record.total_client_bonus_post_tax || 0
+      case "total_delivery":
+        return record.total_delivery || 0
       case "selling_with_bonus":
         return record.selling_with_bonus || 0
-      case "total_net_income":
-        return record.total_net_income || 0
+      case "client_bonus":
+        return record.client_bonus || 0
+      case "delivery_per_unit":
+        return record.delivery_per_unit || 0
+      case "sum_with_delivery":
+        return record.sum_with_delivery || 0
+      case "financial_load_percent":
+        return record.financial_load_percent || 0
+      case "financial_load":
+        return record.financial_load || 0
+      case "sum_with_load":
+        return record.sum_with_load || 0
+      case "markup_percent":
+        return record.markup_percent || 0
+      case "markup":
+        return record.markup || 0
+      case "selling_price_no_vat":
+        return record.selling_price_no_vat || 0
+      case "nds_tax":
+        return record.nds_tax || 0
+      case "selling_price_vat":
+        return record.selling_price_vat || 0
+      case "manager_bonus_percent":
+        return record.manager_bonus_percent || 0
+      case "manager_bonus_unit":
+        return record.manager_bonus_unit || 0
+      case "income_pre_kpn":
+        return record.income_pre_kpn || 0
+      case "kpn_tax":
+        return record.kpn_tax || 0
+      case "net_income_unit":
+        return record.net_income_unit || 0
       case "margin_percent":
         return record.margin_percent || 0
-      case "author":
-        return (getUserName(record.created_by) || "").toLowerCase()
+      case "total_selling_vat":
+        return record.total_selling_vat || 0
+      case "total_selling_bonus":
+        return record.total_selling_bonus || 0
+      case "total_net_income":
+        return record.total_net_income || 0
+      case "total_purchase":
+        return record.total_purchase || 0
+      case "total_expenses":
+        return record.total_expenses || 0
+      case "total_manager_bonuses":
+        return record.total_manager_bonuses || 0
+      case "unit_bonus_client":
+        return record.unit_bonus_client || 0
+      case "total_client_bonus_post_tax":
+        return record.total_client_bonus_post_tax || 0
       default:
         return 0
     }
@@ -582,6 +651,9 @@ export default function AdminDashboard() {
                               onChange={(e) => selectAllFiltered(e.target.checked)}
                             />
                           </TableHead>
+                          {columns.find(col => col.key === "author")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("author")}>Автор</TableHead>
+                          )}
                           {columns.find(col => col.key === "date")?.visible && (
                             <TableHead className="cursor-pointer" onClick={() => handleSort("date")}>Дата</TableHead>
                           )}
@@ -597,9 +669,6 @@ export default function AdminDashboard() {
                           {columns.find(col => col.key === "purchase_price")?.visible && (
                             <TableHead className="cursor-pointer" onClick={() => handleSort("purchase_price")}>Закуп в тенге</TableHead>
                           )}
-                          {columns.find(col => col.key === "total_client_bonus_post_tax")?.visible && (
-                            <TableHead className="cursor-pointer" onClick={() => handleSort("total_client_bonus_post_tax")}>Бонус клиента</TableHead>
-                          )}
                           {columns.find(col => col.key === "selling_with_bonus")?.visible && (
                             <TableHead className="cursor-pointer" onClick={() => handleSort("selling_with_bonus")}>Цена продажи</TableHead>
                           )}
@@ -609,11 +678,8 @@ export default function AdminDashboard() {
                           {columns.find(col => col.key === "margin_percent")?.visible && (
                             <TableHead className="cursor-pointer" onClick={() => handleSort("margin_percent")}>Маржа %</TableHead>
                           )}
-                          {columns.find(col => col.key === "author")?.visible && (
-                            <TableHead className="cursor-pointer" onClick={() => handleSort("author")}>Автор</TableHead>
-                          )}
-                          {columns.find(col => col.key === "total_delivery")?.visible && (
-                            <TableHead className="cursor-pointer" onClick={() => handleSort("total_delivery")}>Общая сумма доставки</TableHead>
+                          {columns.find(col => col.key === "total_client_bonus_post_tax")?.visible && (
+                            <TableHead className="cursor-pointer" onClick={() => handleSort("total_client_bonus_post_tax")}>Бонус клиента</TableHead>
                           )}
                           {columns.find(col => col.key === "client_bonus")?.visible && (
                             <TableHead className="cursor-pointer" onClick={() => handleSort("client_bonus")}>Общий бонус клиент</TableHead>
@@ -694,6 +760,9 @@ export default function AdminDashboard() {
                                 onChange={() => toggleSelect(record.id)}
                               />
                             </TableCell>
+                            {columns.find(col => col.key === "author")?.visible && (
+                              <TableCell>{getUserName(record.created_by)}</TableCell>
+                            )}
                             {columns.find(col => col.key === "date")?.visible && (
                               <TableCell>
                                 {record.date && !isNaN(new Date(record.date).getTime())
@@ -713,9 +782,6 @@ export default function AdminDashboard() {
                             {columns.find(col => col.key === "purchase_price")?.visible && (
                               <TableCell>{formatCurrency(record.purchase_price)}</TableCell>
                             )}
-                            {columns.find(col => col.key === "total_client_bonus_post_tax")?.visible && (
-                              <TableCell>{formatCurrency(record.total_client_bonus_post_tax || 0)}</TableCell>
-                            )}
                             {columns.find(col => col.key === "selling_with_bonus")?.visible && (
                               <TableCell>{formatCurrency(record.selling_with_bonus)}</TableCell>
                             )}
@@ -733,8 +799,8 @@ export default function AdminDashboard() {
                                 </Badge>
                               </TableCell>
                             )}
-                            {columns.find(col => col.key === "author")?.visible && (
-                              <TableCell>{getUserName(record.created_by)}</TableCell>
+                            {columns.find(col => col.key === "total_client_bonus_post_tax")?.visible && (
+                              <TableCell>{formatCurrency(record.total_client_bonus_post_tax || 0)}</TableCell>
                             )}
                             {columns.find(col => col.key === "total_delivery")?.visible && (
                               <TableCell>{formatCurrency(record.total_delivery || 0)}</TableCell>
