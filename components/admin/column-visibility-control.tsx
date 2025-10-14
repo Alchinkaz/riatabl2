@@ -15,6 +15,7 @@ export interface ColumnConfig {
   visible: boolean
   required?: boolean
   order?: number
+  width?: number
 }
 
 interface ColumnVisibilityControlProps {
