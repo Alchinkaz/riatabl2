@@ -110,17 +110,11 @@ export function calculateSalesRecord(input: {
   // L = (M / K) * 100 (% накр)
   const L = K !== 0 ? (M / K) * 100 : 0
 
-  // Iterative calculation for N and O
-  let N = P // Initial guess for selling price without VAT
-  let O = 0 // VAT tax
+  // O = P * 12 / (12 + 100) (НДС по формуле)
+  const O = P * 12 / (12 + 100)
 
-  // Iterate to solve N = P - O and O = N * 0.12
-  for (let i = 0; i < 10; i++) {
-    O = N * 0.12
-    const newN = P - O
-    if (Math.abs(newN - N) < 0.01) break
-    N = newN
-  }
+  // N = P - O (Цена продажи без НДС)
+  const N = P - O
 
   // R = 3% (% мен-ра)
   const R = 3
@@ -128,8 +122,8 @@ export function calculateSalesRecord(input: {
   // S = N * (R / 100) (мен-ра)
   const S = N * (R / 100)
 
-  // T = P - E - F - J - S - O (Доход с ед. без вычета КПН)
-  const T = P - E - F - J - S - O
+  // T = P - S - K - O (Доход с ед. без вычета КПН)
+  const T = P - S - K - O
 
   // U = T * 0.2 (Налоги КПН)
   const U = T * 0.2

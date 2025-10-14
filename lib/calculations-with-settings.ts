@@ -89,11 +89,11 @@ export function calculateSalesRecordWithSettings(
   // L = ((P / K) - 1) * 100 (% накрутки)
   const L = K !== 0 ? ((P / K) - 1) * 100 : 0
 
-  // N = P / (1 + НДС) (Цена продажи без НДС)
-  const N = P / (1 + config.vat_rate / 100)
+  // O = P * 12 / (12 + 100) (НДС по формуле)
+  const O = P * 12 / (12 + 100)
 
-  // O = (P - G) * (НДС / 100) (Налоги НДС)
-  const O = (P - G) * (config.vat_rate / 100)
+  // N = P - O (Цена продажи без НДС)
+  const N = P - O
 
   // R = manager_bonus_percent (% менеджера)
   const R = config.manager_bonus_percent
