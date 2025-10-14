@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -46,10 +46,6 @@ export function DraggableTable({
 }: DraggableTableProps) {
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null)
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null)
-  const [resizingColumn, setResizingColumn] = useState<string | null>(null)
-  const [resizeStartX, setResizeStartX] = useState<number>(0)
-  const [resizeStartWidth, setResizeStartWidth] = useState<number>(0)
-  const tableRef = useRef<HTMLTableElement>(null)
 
   // Обработка начала перетаскивания колонки
   const handleDragStart = (e: React.DragEvent, columnKey: string) => {
@@ -102,39 +98,6 @@ export function DraggableTable({
     setDragOverColumn(null)
   }
 
-  // Обработка начала изменения размера колонки
-  const handleResizeStart = (e: React.MouseEvent, columnKey: string) => {
-    e.preventDefault()
-    setResizingColumn(columnKey)
-    setResizeStartX(e.clientX)
-    
-    const column = columns.find(col => col.key === columnKey)
-    setResizeStartWidth(column?.width || 150)
-    
-    document.addEventListener('mousemove', handleResizeMove)
-    document.addEventListener('mouseup', handleResizeEnd)
-  }
-
-  // Обработка изменения размера колонки
-  const handleResizeMove = useCallback((e: MouseEvent) => {
-    if (!resizingColumn) return
-    
-    const deltaX = e.clientX - resizeStartX
-    const newWidth = Math.max(50, resizeStartWidth + deltaX) // Минимальная ширина 50px
-    
-    const updatedColumns = columns.map(col => 
-      col.key === resizingColumn ? { ...col, width: newWidth } : col
-    )
-    
-    onColumnsChange(updatedColumns)
-  }, [resizingColumn, resizeStartX, resizeStartWidth, columns, onColumnsChange])
-
-  // Обработка окончания изменения размера колонки
-  const handleResizeEnd = useCallback(() => {
-    setResizingColumn(null)
-    document.removeEventListener('mousemove', handleResizeMove)
-    document.removeEventListener('mouseup', handleResizeEnd)
-  }, [handleResizeMove])
 
   // Рендер ячейки таблицы
   const renderTableCell = (record: StoredRecord, column: ColumnConfig) => {
@@ -180,10 +143,10 @@ export function DraggableTable({
 
   return (
     <div className="overflow-x-auto">
-      <Table ref={tableRef}>
+      <Table>
         <TableHeader>
           <TableRow>
-            <TableHead style={{ width: 50 }}>
+            <TableHead>
               <input
                 type="checkbox"
                 checked={records.length > 0 && selectedIds.size === records.length}
@@ -194,7 +157,6 @@ export function DraggableTable({
               <TableHead
                 key={column.key}
                 className="cursor-pointer relative group select-none"
-                style={{ width: column.width || 150 }}
                 draggable={!column.required}
                 onDragStart={(e) => !column.required && handleDragStart(e, column.key)}
                 onDragOver={(e) => !column.required && handleDragOver(e, column.key)}
@@ -216,15 +178,9 @@ export function DraggableTable({
                 {dragOverColumn === column.key && draggedColumn !== column.key && (
                   <div className="absolute inset-0 bg-green-100 border-2 border-green-500 rounded opacity-50" />
                 )}
-                
-                {/* Ресайзер колонки */}
-                <div
-                  className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onMouseDown={(e) => handleResizeStart(e, column.key)}
-                />
               </TableHead>
             ))}
-            <TableHead style={{ width: 100 }}>Действия</TableHead>
+            <TableHead>Действия</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -238,7 +194,7 @@ export function DraggableTable({
                 />
               </TableCell>
               {columns.filter(col => col.visible).map((column) => (
-                <TableCell key={column.key} style={{ width: column.width || 150 }}>
+                <TableCell key={column.key}>
                   {renderTableCell(record, column)}
                 </TableCell>
               ))}
