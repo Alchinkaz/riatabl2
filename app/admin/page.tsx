@@ -15,13 +15,14 @@ import { CommandDialog, CommandInput, CommandList, CommandItem, CommandEmpty } f
 import { AdminRecordForm } from "@/components/admin/admin-record-form"
 import { FormulaEditor } from "@/components/admin/formula-editor"
 import { RecordViewDialog } from "@/components/admin/record-view"
+import { MigrationPanel } from "@/components/admin/migration-panel"
 import { useFormulaSettings } from "@/contexts/formula-settings-context"
 import { calculateSalesRecordWithSettings } from "@/lib/calculations-with-settings"
 import { recordStorage, type StoredRecord } from "@/lib/storage"
 // import { userStorage } from "@/lib/user-storage"
 import { supabase } from "@/lib/supabase"
 import { formatCurrency, formatPercent } from "@/lib/calculations"
-import { Plus, Edit, Trash2, Filter, Users, TrendingUp, DollarSign, Target, Calculator, Eye, Search } from "lucide-react"
+import { Plus, Edit, Trash2, Filter, Users, TrendingUp, DollarSign, Target, Calculator, Eye, Search, Database } from "lucide-react"
 import { format } from "date-fns"
 import { ru } from "date-fns/locale"
 import { useRouter } from "next/navigation"
@@ -319,11 +320,15 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="records">Записи расчетов</TabsTrigger>
             <TabsTrigger value="formulas">
               <Calculator className="h-4 w-4 mr-2" />
               Настройка формул
+            </TabsTrigger>
+            <TabsTrigger value="migration">
+              <Database className="h-4 w-4 mr-2" />
+              Миграция
             </TabsTrigger>
           </TabsList>
 
@@ -616,6 +621,12 @@ export default function AdminDashboard() {
 
           <TabsContent value="formulas">
             <FormulaEditor />
+          </TabsContent>
+
+          <TabsContent value="migration">
+            <div className="flex justify-center">
+              <MigrationPanel />
+            </div>
           </TabsContent>
         </Tabs>
 
