@@ -70,7 +70,7 @@ export function FormulaTemplateGenerator() {
         ["AA", "Общая сумма закупа", "AA = D * E", "AA = D * E", "Общая стоимость закупки"],
         ["AB", "Сумма общих расходов", "AB = AA + H + (D * J) + (D * S) + (D * O) + (D * U)", "AB = AA + H + (D * J) + (D * S) + (D * O) + (D * U)", "Общие расходы"],
         ["AC", "Общая сумма бонусов менеджера", "AC = D * S", "AC = D * S", "Общие бонусы менеджера"],
-        ["AF", "Бонус клиента с вычетом налога", "AF = AE * (1 - налог/100)", "AF = AE * (1 - налог/100)", "Бонус клиента после вычета налогов"],
+        
       ]
       
       const formulasSheet = XLSX.utils.aoa_to_sheet(formulasData)
@@ -117,7 +117,7 @@ export function FormulaTemplateGenerator() {
         ["Общая сумма закупа", "AA", "=D3*E3", "Общая стоимость закупки", "=AA3"],
         ["Сумма общих расходов", "AB", "=AA3+H3+(D3*J3)+(D3*S3)+(D3*O3)+(D3*U3)", "Общие расходы", "=AB3"],
         ["Общая сумма бонусов менеджера", "AC", "=D3*S3", "Общие бонусы менеджера", "=AC3"],
-        ["Бонус клиента с вычетом налога", "AF", "=AE3/1.32", "Бонус клиента после вычета налогов", "=AF3"],
+        
       ]
       
       const exampleSheet = XLSX.utils.aoa_to_sheet(exampleData)
@@ -187,7 +187,6 @@ export function FormulaTemplateGenerator() {
         ["   AC - Общая сумма бонусов менеджера"],
         ["   AD - Бонус клиента за единицу"],
         ["   AE - Общий бонус клиента"],
-        ["   AF - Бонус клиента с вычетом налогов"],
       ]
       
       const instructionsSheet = XLSX.utils.aoa_to_sheet(instructionsData)

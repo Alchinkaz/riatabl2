@@ -45,7 +45,7 @@ const FORMULA_FIELDS = [
   { key: "total_expenses", letter: "AB", title: "Сумма общих расходов", formula: "AB = AA + H + (D * J) + (D * S) + (D * O) + (D * U)" },
   { key: "total_manager_bonuses", letter: "AC", title: "Общая сумма бонусов менеджера", formula: "AC = D * S" },
   { key: "unit_bonus_client", letter: "AD", title: "Бонус за ед.", formula: "AD = AE / D" },
-  { key: "total_client_bonus_post_tax", letter: "AF", title: "Общий бонус клиент с вычетом налога", formula: "AF = AE * (1 - налог/100)" },
+  
 ]
 
 export function FormulaExcelExport({ config, customFormulas, onImport }: FormulaExcelExportProps) {

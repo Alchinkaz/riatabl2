@@ -62,7 +62,7 @@ export default function AdminDashboard() {
     { key: "purchase_price", label: "Закуп в тенге", description: "Цена закупки", visible: true },
     { key: "total_delivery", label: "Общая сумма доставки", description: "Общая сумма доставки", visible: false },
     { key: "selling_with_bonus", label: "Цена продажи", description: "Цена продажи с бонусом", visible: true },
-    { key: "client_bonus", label: "Общий бонус клиент", description: "Общий бонус клиента", visible: false },
+    { key: "client_bonus", label: "Общий бонус клиента", description: "Общий бонус клиента", visible: true },
     
     // Расчетные поля
     { key: "delivery_per_unit", label: "Дост-в за ед", description: "Доставка за единицу", visible: false },
@@ -90,7 +90,6 @@ export default function AdminDashboard() {
     { key: "total_expenses", label: "Общие расходы", description: "Сумма общих расходов", visible: false },
     { key: "total_manager_bonuses", label: "Бонусы менеджера", description: "Общая сумма бонусов менеджера", visible: false },
     { key: "unit_bonus_client", label: "Бонус за ед", description: "Бонус клиента за единицу", visible: false },
-    { key: "total_client_bonus_post_tax", label: "Бонус клиента", description: "Общий бонус клиента с вычетом налога", visible: true },
   ])
   
   const [sortKey, setSortKey] = useState<
@@ -126,7 +125,6 @@ export default function AdminDashboard() {
     | "total_expenses"
     | "total_manager_bonuses"
     | "unit_bonus_client"
-    | "total_client_bonus_post_tax"
   >("date")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
 
@@ -382,8 +380,7 @@ export default function AdminDashboard() {
         return record.total_manager_bonuses || 0
       case "unit_bonus_client":
         return record.unit_bonus_client || 0
-      case "total_client_bonus_post_tax":
-        return record.total_client_bonus_post_tax || 0
+      
       default:
         return 0
     }

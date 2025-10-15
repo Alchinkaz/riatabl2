@@ -248,8 +248,8 @@ export function RecordViewDialog({ open, onOpenChange, record, onSuccess }: Reco
                 <Input value={formatCurrency(record.unit_bonus_client || 0)} readOnly />
               </div>
               <div className="space-y-2">
-                <Label>Общий бонус клиент с вычетом налога</Label>
-                <Input value={formatCurrency(record.total_client_bonus_post_tax || 0)} readOnly />
+                <Label>Общий бонус клиента</Label>
+                <Input value={formatCurrency(record.client_bonus || 0)} readOnly />
               </div>
             </div>
           </div>

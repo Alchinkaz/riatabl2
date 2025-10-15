@@ -34,7 +34,6 @@ export interface SalesRecord {
   total_expenses?: number
   total_manager_bonuses?: number
   unit_bonus_client?: number
-  total_client_bonus_post_tax?: number
   created_at?: string
   updated_at?: string
 }
@@ -152,8 +151,7 @@ export function calculateSalesRecord(input: {
   // AC = D * S (Общая сумма бонусов менеджера)
   const AC = D * S
 
-  // AF = AE * (1 - 32/100) (Общий бонус клиент с вычетом налога)
-  const AF = AE * (1 - 32 / 100)
+  // AF метрика удалена: используем только AE (Общий бонус клиента)
 
   return {
     quantity: D,
@@ -184,7 +182,6 @@ export function calculateSalesRecord(input: {
     total_expenses: AB,
     total_manager_bonuses: AC,
     unit_bonus_client: AD,
-    total_client_bonus_post_tax: AF,
   }
 }
 

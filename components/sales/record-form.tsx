@@ -484,8 +484,8 @@ export function RecordForm({ open, onOpenChange, record, onSuccess }: RecordForm
                         <Input value={formatCurrency(calculations.unit_bonus_client || 0)} readOnly />
                       </div>
                       <div className="space-y-2">
-                        <Label>Общий бонус клиент с вычетом налога</Label>
-                        <Input value={formatCurrency(calculations.total_client_bonus_post_tax || 0)} readOnly />
+                        <Label>Общий бонус клиента</Label>
+                        <Input value={formatCurrency(calculations.client_bonus || 0)} readOnly />
                       </div>
                     </div>
                   </div>

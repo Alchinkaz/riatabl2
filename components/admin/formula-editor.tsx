@@ -73,7 +73,7 @@ const FORMULA_DESCRIPTIONS = {
   // Бонусы клиента
   unit_bonus_client: "AD = AE / D (Бонус за ед.)",
   total_client_bonus: "AE = AE (Общий бонус клиент)",
-  total_client_bonus_post_tax: "AF = AE * (1 - налог/100) (Общий бонус клиент с вычетом налога)",
+  // AF удален
 }
 
 const DEFAULT_CUSTOM_FORMULAS: CustomFormulas = {
@@ -97,7 +97,7 @@ const DEFAULT_CUSTOM_FORMULAS: CustomFormulas = {
   total_expenses: "AB = AA + H + (D * J) + (D * S) + (D * O) + (D * U)",
   total_manager_bonuses: "AC = D * S",
   unit_bonus_client: "AD = AE / D",
-  total_client_bonus_post_tax: "AF = AE * (1 - налог/100)",
+  // AF удален
 }
 
 // Отображаемый порядок и подписи (буква + русское название)
@@ -122,7 +122,7 @@ const FORMULA_FIELDS: Array<{ key: keyof CustomFormulas; letter: string; title: 
   { key: "total_expenses", letter: "AB", title: "Сумма общих расходов", placeholder: "AB = AA + H + (D * J) + (D * S) + (D * O) + (D * U)" },
   { key: "total_manager_bonuses", letter: "AC", title: "Общие бонусы менеджера", placeholder: "AC = D * S" },
   { key: "unit_bonus_client", letter: "AD", title: "Бонус за единицу", placeholder: "AD = AE / D" },
-  { key: "total_client_bonus_post_tax", letter: "AF", title: "Бонус клиента с налогом", placeholder: "AF = AE * (1 - налог/100)" },
+  
 ]
 
 export function FormulaEditor() {

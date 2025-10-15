@@ -131,8 +131,7 @@ export function calculateSalesRecordWithSettings(
   // AC = D * S (Общая сумма бонусов менеджера)
   const AC = D * S
 
-  // AF = AE * (1 - client_bonus_tax_rate / 100) (Общий бонус клиент с вычетом налога)
-  const AF = AE * (1 - config.client_bonus_tax_rate / 100)
+  // AF метрика удалена: используем только AE (Общий бонус клиента)
 
   return {
     quantity: D,
@@ -163,7 +162,6 @@ export function calculateSalesRecordWithSettings(
     total_expenses: AB,
     total_manager_bonuses: AC,
     unit_bonus_client: AD,
-    total_client_bonus_post_tax: AF,
   }
 }
 
