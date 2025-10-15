@@ -83,7 +83,7 @@ export default function AdminDashboard() {
     { key: "margin_percent", label: "Маржа %", description: "Процент маржи", visible: true },
     
     // Общие суммы
-    { key: "total_selling_vat", label: "Общая сумма с НДС", description: "Общая сумма продажи с НДС", visible: false },
+    { key: "total_selling_vat", label: "Общая сумма продажи с НДС", description: "Общая сумма продажи с НДС", visible: false },
     { key: "total_selling_bonus", label: "Общая сумма с бонусом", description: "Общая сумма продажи с НДС с учетом бонуса клиента", visible: false },
     { key: "total_net_income", label: "Сумма дохода", description: "Общая сумма чистого дохода", visible: true },
     { key: "total_purchase", label: "Общая сумма закупа", description: "Общая сумма закупа товара", visible: false },

@@ -115,7 +115,7 @@ const FORMULA_FIELDS: Array<{ key: keyof CustomFormulas; letter: string; title: 
   { key: "kpn_tax", letter: "U", title: "КПН", placeholder: "U = T * (КПН / 100)" },
   { key: "net_income_unit", letter: "V", title: "Чистый доход за ед.", placeholder: "V = T - U" },
   { key: "margin_percent", letter: "W", title: "Маржа в %", placeholder: "W = (V / P) * 100" },
-  { key: "total_selling_vat", letter: "X", title: "Общая сумма с НДС", placeholder: "X = D * P" },
+  { key: "total_selling_vat", letter: "X", title: "Общая сумма продажи с НДС", placeholder: "X = D * P" },
   { key: "total_selling_bonus", letter: "Y", title: "Общая сумма с бонусом", placeholder: "Y = D * Q" },
   { key: "total_net_income", letter: "Z", title: "Сумма чистого дохода", placeholder: "Z = D * V" },
   { key: "total_purchase", letter: "AA", title: "Общая сумма закупа", placeholder: "AA = D * E" },
