@@ -115,22 +115,20 @@ export function calculateSalesRecord(input: {
   // N = P - O (Цена продажи без НДС)
   const N = P - O
 
-  // R = 3% (% мен-ра)
-  const R = 3
+  // Provisional pass with base manager percent
+  const R_base = 3
+  const S_base = N * (R_base / 100)
+  const T_base = P - S_base - K - O
+  const U_base = T_base * 0.2
+  const V_base = T_base - U_base
+  const W_base = P !== 0 ? (V_base / P) * 100 : 0
 
-  // S = N * (R / 100) (мен-ра)
+  // If margin < 13%, manager percent is 0% and we recompute affected fields
+  const R = W_base < 13 ? 0 : R_base
   const S = N * (R / 100)
-
-  // T = P - S - K - O (Доход с ед. без вычета КПН)
   const T = P - S - K - O
-
-  // U = T * 0.2 (Налоги КПН)
   const U = T * 0.2
-
-  // V = T - U (Чистый доход за ед.)
   const V = T - U
-
-  // W = (V / P) * 100 (Маржа в %)
   const W = P !== 0 ? (V / P) * 100 : 0
 
   // X = D * P (Общая сумма продажи с НДС)

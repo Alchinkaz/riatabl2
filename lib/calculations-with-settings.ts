@@ -95,22 +95,20 @@ export function calculateSalesRecordWithSettings(
   // N = P - O (Цена продажи без НДС)
   const N = P - O
 
-  // R = manager_bonus_percent (% менеджера)
-  const R = config.manager_bonus_percent
+  // Provisional pass with configured manager percent to get preliminary margin
+  const R_base = config.manager_bonus_percent
+  const S_base = N * (R_base / 100)
+  const T_base = P - S_base - K - O
+  const U_base = T_base * (config.kpn_tax_rate / 100)
+  const V_base = T_base - U_base
+  const W_base = P !== 0 ? (V_base / P) * 100 : 0
 
-  // S = N / 100 * R (Бонус менеджера за ед.)
+  // If preliminary margin < 13%, manager percent becomes 0% and we recompute
+  const R = W_base < 13 ? 0 : R_base
   const S = N * (R / 100)
-
-  // T = P - S - K - O (Доход с ед. без вычета КПН)
   const T = P - S - K - O
-
-  // U = T * (kpn_tax_rate / 100) (Налоги КПН)
   const U = T * (config.kpn_tax_rate / 100)
-
-  // V = T - U (Чистый доход за ед.)
   const V = T - U
-
-  // W = V / (P / 100) (Маржа в %)
   const W = P !== 0 ? (V / P) * 100 : 0
 
   // X = D * P (Общая сумма продажи с НДС)
