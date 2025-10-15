@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { useAuth } from "@/contexts/auth-context"
+import { loadAdminColumns, saveAdminColumns } from "@/lib/ui-settings"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -25,47 +27,69 @@ interface ColumnVisibilityControlProps {
 export function ColumnVisibilityControl({ columns, onColumnsChange }: ColumnVisibilityControlProps) {
   const [isOpen, setIsOpen] = useState(false)
   const hasLoaded = useRef(false)
+  const { user } = useAuth()
 
   // Загружаем сохраненные настройки колонок при монтировании
   useEffect(() => {
     if (hasLoaded.current) return
     
-    const savedColumns = localStorage.getItem('admin-column-visibility')
-    if (savedColumns) {
+    ;(async () => {
       try {
-        const parsedColumns = JSON.parse(savedColumns)
-        // Обновляем видимость и порядок, сохраняя обязательные колонки
-        const updatedColumns = columns.map(col => {
-          const savedCol = parsedColumns.find((s: ColumnConfig) => s.key === col.key)
-          return savedCol ? { ...col, visible: savedCol.visible, order: savedCol.order } : col
-        })
-        
-        // Сортируем колонки по порядку
-        const sortedColumns = updatedColumns.sort((a, b) => {
-          if (a.required && !b.required) return -1
-          if (!a.required && b.required) return 1
-          if (a.required && b.required) return 0
-          
-          const orderA = a.order || 999
-          const orderB = b.order || 999
-          return orderA - orderB
-        })
-        
-        onColumnsChange(sortedColumns)
-        hasLoaded.current = true
+        // 1) Try cloud
+        if (user?.id) {
+          const cloud = await loadAdminColumns(user.id)
+          if (cloud && Array.isArray(cloud)) {
+            const updatedColumns = columns.map(col => {
+              const savedCol = cloud.find((s: ColumnConfig) => s.key === col.key)
+              return savedCol ? { ...col, visible: savedCol.visible, order: savedCol.order } : col
+            })
+            const sortedColumns = updatedColumns.sort((a, b) => {
+              if (a.required && !b.required) return -1
+              if (!a.required && b.required) return 1
+              if (a.required && b.required) return 0
+              const orderA = a.order || 999
+              const orderB = b.order || 999
+              return orderA - orderB
+            })
+            onColumnsChange(sortedColumns)
+            hasLoaded.current = true
+            return
+          }
+        }
+        // 2) Fallback to localStorage
+        const savedColumns = localStorage.getItem('admin-column-visibility')
+        if (savedColumns) {
+          const parsedColumns = JSON.parse(savedColumns)
+          const updatedColumns = columns.map(col => {
+            const savedCol = parsedColumns.find((s: ColumnConfig) => s.key === col.key)
+            return savedCol ? { ...col, visible: savedCol.visible, order: savedCol.order } : col
+          })
+          const sortedColumns = updatedColumns.sort((a, b) => {
+            if (a.required && !b.required) return -1
+            if (!a.required && b.required) return 1
+            if (a.required && b.required) return 0
+            const orderA = a.order || 999
+            const orderB = b.order || 999
+            return orderA - orderB
+          })
+          onColumnsChange(sortedColumns)
+        }
       } catch (error) {
         console.error('Ошибка загрузки настроек колонок:', error)
+      } finally {
         hasLoaded.current = true
       }
-    } else {
-      hasLoaded.current = true
-    }
-  }, [columns, onColumnsChange])
+    })()
+  }, [columns, onColumnsChange, user?.id])
 
   // Сохраняем настройки при изменении
   useEffect(() => {
+    // Save both cloud (if possible) and local as fallback
+    if (user?.id) {
+      saveAdminColumns(user.id, columns).catch((e) => console.error('saveAdminColumns failed', e))
+    }
     localStorage.setItem('admin-column-visibility', JSON.stringify(columns))
-  }, [columns])
+  }, [columns, user?.id])
 
   const handleColumnToggle = (key: string, visible: boolean) => {
     // Не позволяем скрывать обязательные колонки
