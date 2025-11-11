@@ -201,7 +201,11 @@ export function DraggableTable({
         </TableHeader>
         <TableBody>
           {records.map((record) => (
-            <TableRow key={record.id} className={getRowBgColor(record.margin_percent || 0)}>
+            <TableRow
+              key={record.id}
+              className={`${getRowBgColor(record.margin_percent || 0)} cursor-pointer`}
+              onDoubleClick={() => onViewRecord(record)}
+            >
               <TableCell>
                 <input
                   type="checkbox"
@@ -225,9 +229,6 @@ export function DraggableTable({
               })}
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => onViewRecord(record)}>
-                    <Eye className="h-4 w-4" />
-                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
