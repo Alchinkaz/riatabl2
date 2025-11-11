@@ -141,7 +141,7 @@ export function DraggableTable({
 
   return (
     <div className="overflow-x-auto">
-      <Table>
+      <Table className="w-full table-fixed">
         <TableHeader>
           <TableRow>
             <TableHead>
@@ -168,14 +168,14 @@ export function DraggableTable({
               return (
               <TableHead
                 key={column.key}
-                className={cn("cursor-pointer relative group select-none", alignClass)}
+                className={cn("cursor-pointer relative group select-none whitespace-nowrap overflow-hidden text-ellipsis", alignClass)}
                 draggable={!column.required}
                 onDragStart={(e) => !column.required && handleDragStart(e, column.key)}
                 onDragOver={(e) => !column.required && handleDragOver(e, column.key)}
                 onDrop={(e) => !column.required && handleDrop(e, column.key)}
                 onClick={() => onSort(column.key)}
               >
-                <div className={cn("flex items-center gap-2", justifyClass)}>
+                <div className={cn("flex items-center gap-2 w-full", justifyClass)}>
                   <span className="truncate">{column.label}</span>
                   {!column.required && (
                     <GripVertical className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -218,7 +218,13 @@ export function DraggableTable({
                       ? "text-center"
                       : "text-left"
                 return (
-                  <TableCell key={column.key} className={alignClass}>
+                  <TableCell
+                    key={column.key}
+                    className={cn(
+                      "whitespace-nowrap overflow-hidden text-ellipsis",
+                      alignClass
+                    )}
+                  >
                     {renderTableCell(record, column)}
                   </TableCell>
                 )
