@@ -222,7 +222,7 @@ export function DraggableTable({
 
   return (
     <div className="overflow-x-auto">
-      <Table className="w-full table-fixed">
+      <Table className="w-full">
         <TableHeader>
           <TableRow>
             <TableHead>
@@ -246,12 +246,12 @@ export function DraggableTable({
                   : alignment === "center"
                     ? "justify-center"
                     : "justify-between"
-              const columnWidth = column.width || 150
+              const columnWidth = column.width
               return (
               <TableHead
                 key={column.key}
-                className={cn("cursor-pointer relative group select-none whitespace-nowrap overflow-hidden text-ellipsis", alignClass)}
-                style={{ width: `${columnWidth}px`, minWidth: `${columnWidth}px`, maxWidth: `${columnWidth}px` }}
+                className={cn("cursor-pointer relative group select-none", alignClass)}
+                style={columnWidth ? { minWidth: `${columnWidth}px` } : undefined}
                 draggable={!column.required}
                 onDragStart={(e) => !column.required && handleDragStart(e, column.key)}
                 onDragOver={(e) => !column.required && handleDragOver(e, column.key)}
@@ -324,30 +324,14 @@ export function DraggableTable({
                     : alignment === "center"
                       ? "text-center"
                       : "text-left"
-                const justifyContentClass =
-                  alignment === "right"
-                    ? "justify-end"
-                    : alignment === "center"
-                      ? "justify-center"
-                      : "justify-start"
-                const columnWidth = column.width || 150
+                const columnWidth = column.width
                 return (
                   <TableCell
                     key={column.key}
-                    className={cn(
-                      "whitespace-nowrap overflow-hidden text-ellipsis",
-                      alignClass
-                    )}
-                    style={{ width: `${columnWidth}px`, minWidth: `${columnWidth}px`, maxWidth: `${columnWidth}px` }}
+                    className={alignClass}
+                    style={columnWidth ? { minWidth: `${columnWidth}px` } : undefined}
                   >
-                    <div
-                      className={cn(
-                        "flex w-full items-center gap-2",
-                        justifyContentClass
-                      )}
-                    >
-                      {renderTableCell(record, column)}
-                    </div>
+                    {renderTableCell(record, column)}
                   </TableCell>
                 )
               })}
