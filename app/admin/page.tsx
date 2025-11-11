@@ -224,13 +224,20 @@ export default function AdminDashboard() {
   }
 
   const handleDeleteRecord = async (record: StoredRecord) => {
-    if (!confirm("Удалить эту запись? Это действие нельзя отменить.")) return
+    if (!confirm("Удалить эту запись? Это действие нельзя отменить.")) return false
     const res = await fetch(`/api/admin/records/${record.id}`, { method: "DELETE" })
     if (!res.ok) {
       alert("Не удалось удалить запись")
-      return
+      return false
     }
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      next.delete(record.id)
+      return next
+    })
+    setSelectedRecord(undefined)
     await loadRecords()
+    return true
   }
 
   const handleFormSuccess = async () => {
@@ -722,7 +729,6 @@ export default function AdminDashboard() {
                       onToggleSelect={toggleSelect}
                       onSelectAllFiltered={selectAllFiltered}
                       onViewRecord={handleViewRecord}
-                      onDeleteRecord={handleDeleteRecord}
                       onSort={handleSort}
                       sortKey={sortKey}
                       sortDir={sortDir}
@@ -828,7 +834,13 @@ export default function AdminDashboard() {
           onSuccess={handleFormSuccess}
         />
 
-      <RecordViewDialog open={isViewOpen} onOpenChange={setIsViewOpen} record={selectedRecord} onSuccess={handleFormSuccess} />
+      <RecordViewDialog
+        open={isViewOpen}
+        onOpenChange={setIsViewOpen}
+        record={selectedRecord}
+        onSuccess={handleFormSuccess}
+        onDeleteRecord={handleDeleteRecord}
+      />
 
       {/* Counterparty Search Dialog */}
       <CommandDialog open={isCounterpartySearchOpen} onOpenChange={setIsCounterpartySearchOpen} title="Поиск контрагента">

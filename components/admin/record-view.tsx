@@ -16,9 +16,10 @@ interface RecordViewDialogProps {
   onOpenChange: (open: boolean) => void
   record?: StoredRecord
   onSuccess?: () => void
+  onDeleteRecord?: (record: StoredRecord) => Promise<boolean | void> | boolean | void
 }
 
-export function RecordViewDialog({ open, onOpenChange, record, onSuccess }: RecordViewDialogProps) {
+export function RecordViewDialog({ open, onOpenChange, record, onSuccess, onDeleteRecord }: RecordViewDialogProps) {
   const { config, customFormulas } = useFormulaSettings()
   const [formData, setFormData] = useState({
     date: "",
@@ -31,6 +32,7 @@ export function RecordViewDialog({ open, onOpenChange, record, onSuccess }: Reco
     client_bonus: 0,
   })
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     if (record && open) {
@@ -48,6 +50,21 @@ export function RecordViewDialog({ open, onOpenChange, record, onSuccess }: Reco
   }, [record, open])
 
   if (!record) return null
+
+  const handleDelete = async () => {
+    if (!record || !onDeleteRecord) return
+    try {
+      setIsDeleting(true)
+      const result = await onDeleteRecord(record)
+      if (result !== false) {
+        onOpenChange(false)
+      }
+    } catch (error) {
+      console.error("Ошибка удаления записи", error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   const handleSave = async () => {
     try {
@@ -255,6 +272,11 @@ export function RecordViewDialog({ open, onOpenChange, record, onSuccess }: Reco
           </div>
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Отмена</Button>
+            {onDeleteRecord && (
+              <Button variant="destructive" onClick={handleDelete} disabled={isSaving || isDeleting}>
+                Удалить
+              </Button>
+            )}
             <Button onClick={handleSave} disabled={isSaving}>{isSaving ? "Сохранение..." : "Сохранить"}</Button>
           </div>
         </div>
