@@ -124,11 +124,11 @@ export function DraggableTable({
   const getAlignIcon = (align?: "left" | "center" | "right") => {
     switch (align) {
       case "center":
-        return <AlignCenter className="h-3 w-3" />
+        return <AlignCenter className="h-4 w-4" />
       case "right":
-        return <AlignRight className="h-3 w-3" />
+        return <AlignRight className="h-4 w-4" />
       default:
-        return <AlignLeft className="h-3 w-3" />
+        return <AlignLeft className="h-4 w-4" />
     }
   }
 
@@ -219,11 +219,12 @@ export function DraggableTable({
                   <span className="truncate">{column.label}</span>
                   <div className="flex items-center gap-1">
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleAlignChange(column.key)
                       }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 rounded"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       title="Изменить выравнивание (правый клик или клик по иконке)"
                     >
                       {getAlignIcon(column.cellAlign || "left")}
@@ -269,6 +270,12 @@ export function DraggableTable({
                     : alignment === "center"
                       ? "text-center"
                       : "text-left"
+                const justifyContentClass =
+                  alignment === "right"
+                    ? "justify-end"
+                    : alignment === "center"
+                      ? "justify-center"
+                      : "justify-start"
                 return (
                   <TableCell
                     key={column.key}
@@ -277,7 +284,14 @@ export function DraggableTable({
                       alignClass
                     )}
                   >
-                    {renderTableCell(record, column)}
+                    <div
+                      className={cn(
+                        "flex w-full items-center gap-2",
+                        justifyContentClass
+                      )}
+                    >
+                      {renderTableCell(record, column)}
+                    </div>
                   </TableCell>
                 )
               })}
