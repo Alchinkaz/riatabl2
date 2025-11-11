@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { formatCurrency, formatPercent } from "@/lib/calculations"
 import { format } from "date-fns"
 import { ru } from "date-fns/locale"
-import { GripVertical } from "lucide-react"
+import { GripVertical, AlignLeft, AlignCenter, AlignRight } from "lucide-react"
 import type { StoredRecord } from "@/lib/storage"
 import type { ColumnConfig } from "./column-visibility-control"
 import { cn } from "@/lib/utils"
@@ -96,6 +96,42 @@ export function DraggableTable({
     setDragOverColumn(null)
   }
 
+  // Обработка изменения выравнивания колонки
+  const handleAlignChange = (columnKey: string) => {
+    const column = columns.find(col => col.key === columnKey)
+    if (!column) return
+
+    const currentAlign = column.cellAlign || "left"
+    let nextAlign: "left" | "center" | "right"
+
+    // Циклическое переключение: left -> center -> right -> left
+    if (currentAlign === "left") {
+      nextAlign = "center"
+    } else if (currentAlign === "center") {
+      nextAlign = "right"
+    } else {
+      nextAlign = "left"
+    }
+
+    const updatedColumns = columns.map(col =>
+      col.key === columnKey ? { ...col, cellAlign: nextAlign } : col
+    )
+
+    onColumnsChange(updatedColumns)
+  }
+
+  // Получить иконку выравнивания
+  const getAlignIcon = (align?: "left" | "center" | "right") => {
+    switch (align) {
+      case "center":
+        return <AlignCenter className="h-3 w-3" />
+      case "right":
+        return <AlignRight className="h-3 w-3" />
+      default:
+        return <AlignLeft className="h-3 w-3" />
+    }
+  }
+
 
   // Рендер ячейки таблицы
   const renderTableCell = (record: StoredRecord, column: ColumnConfig) => {
@@ -174,12 +210,28 @@ export function DraggableTable({
                 onDragOver={(e) => !column.required && handleDragOver(e, column.key)}
                 onDrop={(e) => !column.required && handleDrop(e, column.key)}
                 onClick={() => onSort(column.key)}
+                onContextMenu={(e) => {
+                  e.preventDefault()
+                  handleAlignChange(column.key)
+                }}
               >
                 <div className={cn("flex items-center gap-2 w-full", justifyClass)}>
                   <span className="truncate">{column.label}</span>
-                  {!column.required && (
-                    <GripVertical className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  )}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleAlignChange(column.key)
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 rounded"
+                      title="Изменить выравнивание (правый клик или клик по иконке)"
+                    >
+                      {getAlignIcon(column.cellAlign || "left")}
+                    </button>
+                    {!column.required && (
+                      <GripVertical className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </div>
                 </div>
                 
                 {/* Индикатор перетаскивания */}

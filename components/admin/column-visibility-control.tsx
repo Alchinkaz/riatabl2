@@ -8,8 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Settings, Eye, EyeOff, AlignLeft, AlignCenter, AlignRight } from "lucide-react"
+import { Settings, Eye, EyeOff } from "lucide-react"
 
 export interface ColumnConfig {
   key: string
@@ -173,24 +172,6 @@ export function ColumnVisibilityControl({ columns, onColumnsChange }: ColumnVisi
     onColumnsChange(updatedColumns)
   }
 
-  const handleAlignChange = (key: string, align: "left" | "center" | "right") => {
-    const updatedColumns = columns.map(col => 
-      col.key === key ? { ...col, cellAlign: align } : col
-    )
-    onColumnsChange(updatedColumns)
-  }
-
-  const getAlignIcon = (align?: "left" | "center" | "right") => {
-    switch (align) {
-      case "center":
-        return <AlignCenter className="h-3 w-3" />
-      case "right":
-        return <AlignRight className="h-3 w-3" />
-      default:
-        return <AlignLeft className="h-3 w-3" />
-    }
-  }
-
   const visibleCount = columns.filter(col => col.visible).length
   const totalCount = columns.length
 
@@ -248,45 +229,13 @@ export function ColumnVisibilityControl({ columns, onColumnsChange }: ColumnVisi
                     className="mt-0.5"
                   />
                   <div className="space-y-1 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <Label
-                        htmlFor={column.key}
-                        className={`text-sm font-medium cursor-pointer ${column.required ? 'text-muted-foreground' : ''}`}
-                      >
-                        {column.label}
-                        {column.required && <span className="text-xs text-muted-foreground ml-1">(обязательно)</span>}
-                      </Label>
-                      <Select
-                        value={column.cellAlign || "left"}
-                        onValueChange={(value) => handleAlignChange(column.key, value as "left" | "center" | "right")}
-                      >
-                        <SelectTrigger size="sm" className="w-20 h-7 px-2">
-                          <div className="flex items-center justify-center w-full">
-                            {getAlignIcon(column.cellAlign || "left")}
-                          </div>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="left">
-                            <div className="flex items-center gap-2">
-                              <AlignLeft className="h-3 w-3" />
-                              <span>Слева</span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="center">
-                            <div className="flex items-center gap-2">
-                              <AlignCenter className="h-3 w-3" />
-                              <span>По центру</span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="right">
-                            <div className="flex items-center gap-2">
-                              <AlignRight className="h-3 w-3" />
-                              <span>Справа</span>
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Label
+                      htmlFor={column.key}
+                      className={`text-sm font-medium cursor-pointer ${column.required ? 'text-muted-foreground' : ''}`}
+                    >
+                      {column.label}
+                      {column.required && <span className="text-xs text-muted-foreground ml-1">(обязательно)</span>}
+                    </Label>
                     {column.description && (
                       <p className="text-xs text-muted-foreground">
                         {column.description}
