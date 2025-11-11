@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { formatCurrency, formatPercent } from "@/lib/calculations"
@@ -44,6 +44,9 @@ export function DraggableTable({
 }: DraggableTableProps) {
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null)
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null)
+  const [resizingColumn, setResizingColumn] = useState<string | null>(null)
+  const [resizeStartX, setResizeStartX] = useState<number>(0)
+  const [resizeStartWidth, setResizeStartWidth] = useState<number>(0)
 
   // Обработка начала перетаскивания колонки
   const handleDragStart = (e: React.DragEvent, columnKey: string) => {
@@ -132,6 +135,48 @@ export function DraggableTable({
     }
   }
 
+  // Обработка начала изменения ширины колонки
+  const handleResizeStart = (e: React.MouseEvent, columnKey: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const column = columns.find(col => col.key === columnKey)
+    if (!column) return
+
+    setResizingColumn(columnKey)
+    setResizeStartX(e.clientX)
+    setResizeStartWidth(column.width || 150)
+  }
+
+  // Обработка изменения ширины во время перетаскивания
+  React.useEffect(() => {
+    if (!resizingColumn) return
+
+    let currentStartX = resizeStartX
+    let currentStartWidth = resizeStartWidth
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const diff = e.clientX - currentStartX
+      const newWidth = Math.max(50, currentStartWidth + diff)
+
+      const updatedColumns = columns.map(col =>
+        col.key === resizingColumn ? { ...col, width: newWidth } : col
+      )
+
+      onColumnsChange(updatedColumns)
+    }
+
+    const handleMouseUp = () => {
+      setResizingColumn(null)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [resizingColumn, resizeStartX, resizeStartWidth, columns, onColumnsChange])
 
   // Рендер ячейки таблицы
   const renderTableCell = (record: StoredRecord, column: ColumnConfig) => {
@@ -201,10 +246,12 @@ export function DraggableTable({
                   : alignment === "center"
                     ? "justify-center"
                     : "justify-between"
+              const columnWidth = column.width || 150
               return (
               <TableHead
                 key={column.key}
                 className={cn("cursor-pointer relative group select-none whitespace-nowrap overflow-hidden text-ellipsis", alignClass)}
+                style={{ width: `${columnWidth}px`, minWidth: `${columnWidth}px`, maxWidth: `${columnWidth}px` }}
                 draggable={!column.required}
                 onDragStart={(e) => !column.required && handleDragStart(e, column.key)}
                 onDragOver={(e) => !column.required && handleDragOver(e, column.key)}
@@ -234,6 +281,13 @@ export function DraggableTable({
                     )}
                   </div>
                 </div>
+                
+                {/* Индикатор изменения ширины */}
+                <div
+                  className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  onMouseDown={(e) => handleResizeStart(e, column.key)}
+                  title="Перетащите для изменения ширины колонки"
+                />
                 
                 {/* Индикатор перетаскивания */}
                 {draggedColumn === column.key && (
@@ -276,6 +330,7 @@ export function DraggableTable({
                     : alignment === "center"
                       ? "justify-center"
                       : "justify-start"
+                const columnWidth = column.width || 150
                 return (
                   <TableCell
                     key={column.key}
@@ -283,6 +338,7 @@ export function DraggableTable({
                       "whitespace-nowrap overflow-hidden text-ellipsis",
                       alignClass
                     )}
+                    style={{ width: `${columnWidth}px`, minWidth: `${columnWidth}px`, maxWidth: `${columnWidth}px` }}
                   >
                     <div
                       className={cn(

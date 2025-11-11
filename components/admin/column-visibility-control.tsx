@@ -18,6 +18,7 @@ export interface ColumnConfig {
   required?: boolean
   order?: number
   cellAlign?: "left" | "center" | "right"
+  width?: number
 }
 
 interface ColumnVisibilityControlProps {
@@ -48,6 +49,7 @@ export function ColumnVisibilityControl({ columns, onColumnsChange }: ColumnVisi
                     visible: savedCol.visible,
                     order: savedCol.order,
                     cellAlign: savedCol.cellAlign ?? col.cellAlign,
+                    width: savedCol.width ?? col.width,
                   }
                 : col
             })
