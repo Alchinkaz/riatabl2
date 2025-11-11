@@ -17,6 +17,7 @@ export interface ColumnConfig {
   visible: boolean
   required?: boolean
   order?: number
+  cellAlign?: "left" | "center" | "right"
 }
 
 interface ColumnVisibilityControlProps {
@@ -41,7 +42,14 @@ export function ColumnVisibilityControl({ columns, onColumnsChange }: ColumnVisi
           if (cloud && Array.isArray(cloud)) {
             const updatedColumns = columns.map(col => {
               const savedCol = cloud.find((s: ColumnConfig) => s.key === col.key)
-              return savedCol ? { ...col, visible: savedCol.visible, order: savedCol.order } : col
+              return savedCol
+                ? {
+                    ...col,
+                    visible: savedCol.visible,
+                    order: savedCol.order,
+                    cellAlign: savedCol.cellAlign ?? col.cellAlign,
+                  }
+                : col
             })
             const sortedColumns = updatedColumns.sort((a, b) => {
               if (a.required && !b.required) return -1
@@ -62,7 +70,14 @@ export function ColumnVisibilityControl({ columns, onColumnsChange }: ColumnVisi
           const parsedColumns = JSON.parse(savedColumns)
           const updatedColumns = columns.map(col => {
             const savedCol = parsedColumns.find((s: ColumnConfig) => s.key === col.key)
-            return savedCol ? { ...col, visible: savedCol.visible, order: savedCol.order } : col
+            return savedCol
+              ? {
+                  ...col,
+                  visible: savedCol.visible,
+                  order: savedCol.order,
+                  cellAlign: savedCol.cellAlign ?? col.cellAlign,
+                }
+              : col
           })
           const sortedColumns = updatedColumns.sort((a, b) => {
             if (a.required && !b.required) return -1

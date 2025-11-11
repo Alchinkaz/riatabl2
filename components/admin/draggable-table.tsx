@@ -10,13 +10,14 @@ import { ru } from "date-fns/locale"
 import { Eye, Trash2, GripVertical } from "lucide-react"
 import type { StoredRecord } from "@/lib/storage"
 import type { ColumnConfig } from "./column-visibility-control"
+import { cn } from "@/lib/utils"
 
 interface DraggableTableProps {
   columns: ColumnConfig[]
   records: StoredRecord[]
   selectedIds: Set<string>
   onToggleSelect: (id: string) => void
-  onSelectAllFiltered: (checked: boolean) => void
+  onSelectAllFiltered: (checked: boolean, ids?: string[]) => void
   onViewRecord: (record: StoredRecord) => void
   onDeleteRecord: (record: StoredRecord) => void
   onSort: (key: string) => void
@@ -149,22 +150,36 @@ export function DraggableTable({
             <TableHead>
               <input
                 type="checkbox"
-                checked={records.length > 0 && selectedIds.size === records.length}
-                onChange={(e) => onSelectAllFiltered(e.target.checked)}
+                checked={records.length > 0 && records.every((record) => selectedIds.has(record.id))}
+                onChange={(e) => onSelectAllFiltered(e.target.checked, records.map((record) => record.id))}
               />
             </TableHead>
-            {columns.filter(col => col.visible).map((column) => (
+            {columns.filter(col => col.visible).map((column) => {
+              const alignment = column.cellAlign ?? "left"
+              const alignClass =
+                alignment === "right"
+                  ? "text-right"
+                  : alignment === "center"
+                    ? "text-center"
+                    : "text-left"
+              const justifyClass =
+                alignment === "right"
+                  ? "justify-end"
+                  : alignment === "center"
+                    ? "justify-center"
+                    : "justify-between"
+              return (
               <TableHead
                 key={column.key}
-                className="cursor-pointer relative group select-none"
+                className={cn("cursor-pointer relative group select-none", alignClass)}
                 draggable={!column.required}
                 onDragStart={(e) => !column.required && handleDragStart(e, column.key)}
                 onDragOver={(e) => !column.required && handleDragOver(e, column.key)}
                 onDrop={(e) => !column.required && handleDrop(e, column.key)}
                 onClick={() => onSort(column.key)}
               >
-                <div className="flex items-center justify-between">
-                  <span>{column.label}</span>
+                <div className={cn("flex items-center gap-2", justifyClass)}>
+                  <span className="truncate">{column.label}</span>
                   {!column.required && (
                     <GripVertical className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                   )}
@@ -179,7 +194,8 @@ export function DraggableTable({
                   <div className="absolute inset-0 bg-green-100 border-2 border-green-500 rounded opacity-50" />
                 )}
               </TableHead>
-            ))}
+              )
+            })}
             <TableHead>Действия</TableHead>
           </TableRow>
         </TableHeader>
@@ -193,11 +209,20 @@ export function DraggableTable({
                   onChange={() => onToggleSelect(record.id)}
                 />
               </TableCell>
-              {columns.filter(col => col.visible).map((column) => (
-                <TableCell key={column.key}>
-                  {renderTableCell(record, column)}
-                </TableCell>
-              ))}
+              {columns.filter(col => col.visible).map((column) => {
+                const alignment = column.cellAlign ?? "left"
+                const alignClass =
+                  alignment === "right"
+                    ? "text-right"
+                    : alignment === "center"
+                      ? "text-center"
+                      : "text-left"
+                return (
+                  <TableCell key={column.key} className={alignClass}>
+                    {renderTableCell(record, column)}
+                  </TableCell>
+                )
+              })}
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" onClick={() => onViewRecord(record)}>

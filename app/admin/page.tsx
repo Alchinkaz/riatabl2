@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Header } from "@/components/layout/header"
 import { Button } from "@/components/ui/button"
@@ -27,6 +27,15 @@ import { Plus, Edit, Trash2, Filter, Users, TrendingUp, DollarSign, Target, Calc
 import { format } from "date-fns"
 import { ru } from "date-fns/locale"
 import { useRouter } from "next/navigation"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 
 export default function AdminDashboard() {
   const { user, isAdmin } = useAuth()
@@ -48,48 +57,51 @@ export default function AdminDashboard() {
   const [filterCounterparty, setFilterCounterparty] = useState("all")
   const [isCounterpartySearchOpen, setIsCounterpartySearchOpen] = useState(false)
   const [users, setUsers] = useState<{ id: string; email: string; name: string | null; role: string }[]>([])
+  const pageSizeOptions = [10, 20, 30, 50, 100] as const
+  const [pageSize, setPageSize] = useState<(typeof pageSizeOptions)[number]>(20)
+  const [currentPage, setCurrentPage] = useState(1)
   
   // Состояние для управления видимостью колонок
   const [columns, setColumns] = useState<ColumnConfig[]>([
     // Обязательные колонки (нельзя скрыть) - Автор первым
-    { key: "author", label: "Автор", description: "Автор записи", visible: true, required: true },
-    { key: "date", label: "Дата", description: "Дата записи", visible: true, required: true },
-    { key: "counterparty", label: "Контрагент", description: "Название контрагента", visible: true, required: true },
+    { key: "author", label: "Автор", description: "Автор записи", visible: true, required: true, cellAlign: "left" },
+    { key: "date", label: "Дата", description: "Дата записи", visible: true, required: true, cellAlign: "center" },
+    { key: "counterparty", label: "Контрагент", description: "Название контрагента", visible: true, required: true, cellAlign: "left" },
     
     // Основные поля
-    { key: "name", label: "Наименование", description: "Наименование товара", visible: true },
-    { key: "quantity", label: "Кол-во", description: "Количество единиц", visible: true },
-    { key: "purchase_price", label: "Закуп в тенге", description: "Цена закупки", visible: true },
-    { key: "total_delivery", label: "Общая сумма доставки", description: "Общая сумма доставки", visible: false },
-    { key: "selling_with_bonus", label: "Цена продажи", description: "Цена продажи с бонусом", visible: true },
-    { key: "client_bonus", label: "Общий бонус клиента", description: "Общий бонус клиента", visible: true },
+    { key: "name", label: "Наименование", description: "Наименование товара", visible: true, cellAlign: "left" },
+    { key: "quantity", label: "Кол-во", description: "Количество единиц", visible: true, cellAlign: "right" },
+    { key: "purchase_price", label: "Закуп в тенге", description: "Цена закупки", visible: true, cellAlign: "right" },
+    { key: "total_delivery", label: "Общая сумма доставки", description: "Общая сумма доставки", visible: false, cellAlign: "right" },
+    { key: "selling_with_bonus", label: "Цена продажи", description: "Цена продажи с бонусом", visible: true, cellAlign: "right" },
+    { key: "client_bonus", label: "Общий бонус клиента", description: "Общий бонус клиента", visible: true, cellAlign: "right" },
     
     // Расчетные поля
-    { key: "delivery_per_unit", label: "Дост-в за ед", description: "Доставка за единицу", visible: false },
-    { key: "sum_with_delivery", label: "Сумма за ед. с доставкой", description: "Сумма за единицу с доставкой", visible: false },
-    { key: "financial_load_percent", label: "Финансовая нагрузка %", description: "Процент финансовой нагрузки", visible: false },
-    { key: "financial_load", label: "Финансовая нагрузка", description: "Финансовая нагрузка в тенге", visible: false },
-    { key: "sum_with_load", label: "Сумма с нагрузкой", description: "Сумма за единицу с доставкой и фин. нагрузкой", visible: false },
-    { key: "markup_percent", label: "% накрутки", description: "Процент накрутки", visible: false },
-    { key: "markup", label: "Накрутка", description: "Накрутка в тенге", visible: false },
-    { key: "selling_price_no_vat", label: "Цена без НДС", description: "Цена продажи без НДС", visible: false },
-    { key: "nds_tax", label: "НДС", description: "Налоги НДС", visible: false },
-    { key: "selling_price_vat", label: "Цена с НДС", description: "Цена продажи с НДС", visible: false },
-    { key: "manager_bonus_percent", label: "% менеджера", description: "Процент бонуса менеджера", visible: false },
-    { key: "manager_bonus_unit", label: "Бонус менеджера за ед.", description: "Бонус менеджера за единицу", visible: false },
-    { key: "income_pre_kpn", label: "Доход без КПН", description: "Доход с единицы без вычета КПН", visible: false },
-    { key: "kpn_tax", label: "КПН", description: "Налоги КПН", visible: false },
-    { key: "net_income_unit", label: "Чистый доход за ед.", description: "Чистый доход за единицу", visible: false },
-    { key: "margin_percent", label: "Маржа %", description: "Процент маржи", visible: true },
+    { key: "delivery_per_unit", label: "Дост-в за ед", description: "Доставка за единицу", visible: false, cellAlign: "right" },
+    { key: "sum_with_delivery", label: "Сумма за ед. с доставкой", description: "Сумма за единицу с доставкой", visible: false, cellAlign: "right" },
+    { key: "financial_load_percent", label: "Финансовая нагрузка %", description: "Процент финансовой нагрузки", visible: false, cellAlign: "right" },
+    { key: "financial_load", label: "Финансовая нагрузка", description: "Финансовая нагрузка в тенге", visible: false, cellAlign: "right" },
+    { key: "sum_with_load", label: "Сумма с нагрузкой", description: "Сумма за единицу с доставкой и фин. нагрузкой", visible: false, cellAlign: "right" },
+    { key: "markup_percent", label: "% накрутки", description: "Процент накрутки", visible: false, cellAlign: "right" },
+    { key: "markup", label: "Накрутка", description: "Накрутка в тенге", visible: false, cellAlign: "right" },
+    { key: "selling_price_no_vat", label: "Цена без НДС", description: "Цена продажи без НДС", visible: false, cellAlign: "right" },
+    { key: "nds_tax", label: "НДС", description: "Налоги НДС", visible: false, cellAlign: "right" },
+    { key: "selling_price_vat", label: "Цена с НДС", description: "Цена продажи с НДС", visible: false, cellAlign: "right" },
+    { key: "manager_bonus_percent", label: "% менеджера", description: "Процент бонуса менеджера", visible: false, cellAlign: "right" },
+    { key: "manager_bonus_unit", label: "Бонус менеджера за ед.", description: "Бонус менеджера за единицу", visible: false, cellAlign: "right" },
+    { key: "income_pre_kpn", label: "Доход без КПН", description: "Доход с единицы без вычета КПН", visible: false, cellAlign: "right" },
+    { key: "kpn_tax", label: "КПН", description: "Налоги КПН", visible: false, cellAlign: "right" },
+    { key: "net_income_unit", label: "Чистый доход за ед.", description: "Чистый доход за единицу", visible: false, cellAlign: "right" },
+    { key: "margin_percent", label: "Маржа %", description: "Процент маржи", visible: true, cellAlign: "right" },
     
     // Общие суммы
-    { key: "total_selling_vat", label: "Общая сумма продажи с НДС", description: "Общая сумма продажи с НДС", visible: false },
-    { key: "total_selling_bonus", label: "Общая сумма с бонусом", description: "Общая сумма продажи с НДС с учетом бонуса клиента", visible: false },
-    { key: "total_net_income", label: "Сумма дохода", description: "Общая сумма чистого дохода", visible: true },
-    { key: "total_purchase", label: "Общая сумма закупа", description: "Общая сумма закупа товара", visible: false },
-    { key: "total_expenses", label: "Общие расходы", description: "Сумма общих расходов", visible: false },
-    { key: "total_manager_bonuses", label: "Бонусы менеджера", description: "Общая сумма бонусов менеджера", visible: false },
-    { key: "unit_bonus_client", label: "Бонус за ед", description: "Бонус клиента за единицу", visible: false },
+    { key: "total_selling_vat", label: "Общая сумма продажи с НДС", description: "Общая сумма продажи с НДС", visible: false, cellAlign: "right" },
+    { key: "total_selling_bonus", label: "Общая сумма с бонусом", description: "Общая сумма продажи с НДС с учетом бонуса клиента", visible: false, cellAlign: "right" },
+    { key: "total_net_income", label: "Сумма дохода", description: "Общая сумма чистого дохода", visible: true, cellAlign: "right" },
+    { key: "total_purchase", label: "Общая сумма закупа", description: "Общая сумма закупа товара", visible: false, cellAlign: "right" },
+    { key: "total_expenses", label: "Общие расходы", description: "Сумма общих расходов", visible: false, cellAlign: "right" },
+    { key: "total_manager_bonuses", label: "Бонусы менеджера", description: "Общая сумма бонусов менеджера", visible: false, cellAlign: "right" },
+    { key: "unit_bonus_client", label: "Бонус за ед", description: "Бонус клиента за единицу", visible: false, cellAlign: "right" },
   ])
   
   const [sortKey, setSortKey] = useState<
@@ -190,6 +202,10 @@ export default function AdminDashboard() {
     setFilteredRecords(filtered)
   }, [records, filterManager, filterMonth, filterDateFrom, filterDateTo, filterCounterparty])
 
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filterManager, filterMonth, filterDateFrom, filterDateTo, filterCounterparty, pageSize])
+
   const handleCreateRecord = () => {
     setSelectedRecord(undefined)
     setIsFormOpen(true)
@@ -230,9 +246,28 @@ export default function AdminDashboard() {
     })
   }
 
-  const selectAllFiltered = (checked: boolean) => {
-    if (checked) setSelectedIds(new Set(filteredRecords.map((r) => r.id)))
-    else setSelectedIds(new Set())
+  const selectAllFiltered = (checked: boolean, ids?: string[]) => {
+    if (checked) {
+      if (ids && ids.length > 0) {
+        setSelectedIds((prev) => {
+          const next = new Set(prev)
+          ids.forEach((id) => next.add(id))
+          return next
+        })
+      } else {
+        setSelectedIds(new Set(filteredRecords.map((r) => r.id)))
+      }
+    } else {
+      if (ids && ids.length > 0) {
+        setSelectedIds((prev) => {
+          const next = new Set(prev)
+          ids.forEach((id) => next.delete(id))
+          return next
+        })
+      } else {
+        setSelectedIds(new Set())
+      }
+    }
   }
 
   const applyBulkManagerPercent = async () => {
@@ -396,6 +431,48 @@ export default function AdminDashboard() {
     const sb = String(vb)
     return sortDir === "asc" ? sa.localeCompare(sb) : sb.localeCompare(sa)
   })
+
+  const totalPages = Math.max(1, Math.ceil(sortedRecords.length / pageSize))
+  const safeCurrentPage = Math.min(currentPage, totalPages)
+  const paginatedRecords = sortedRecords.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize)
+  const pageStart = sortedRecords.length === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1
+  const pageEnd = sortedRecords.length === 0 ? 0 : Math.min(sortedRecords.length, safeCurrentPage * pageSize)
+
+  const paginationItems = useMemo<(number | "ellipsis")[]>(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1)
+    }
+
+    const items: (number | "ellipsis")[] = [1]
+    const start = Math.max(2, safeCurrentPage - 1)
+    const end = Math.min(totalPages - 1, safeCurrentPage + 1)
+
+    if (start > 2) {
+      items.push("ellipsis")
+    }
+
+    for (let page = start; page <= end; page++) {
+      items.push(page)
+    }
+
+    if (end < totalPages - 1) {
+      items.push("ellipsis")
+    }
+
+    items.push(totalPages)
+    return items
+  }, [safeCurrentPage, totalPages])
+
+  const handlePageChange = (page: number) => {
+    const next = Math.max(1, Math.min(page, totalPages))
+    setCurrentPage(next)
+  }
+
+  useEffect(() => {
+    if (currentPage !== safeCurrentPage) {
+      setCurrentPage(safeCurrentPage)
+    }
+  }, [safeCurrentPage, currentPage])
 
   if (!isAdmin) {
     return (
@@ -637,22 +714,96 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                 ) : (
-                  <DraggableTable
-                    columns={columns}
-                    records={sortedRecords}
-                    selectedIds={selectedIds}
-                    onToggleSelect={toggleSelect}
-                    onSelectAllFiltered={selectAllFiltered}
-                    onViewRecord={handleViewRecord}
-                    onDeleteRecord={handleDeleteRecord}
-                    onSort={handleSort}
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    getUserName={getUserName}
-                    getRowBgColor={getRowBgColor}
-                    getMarginColor={getMarginColor}
-                    onColumnsChange={setColumns}
-                  />
+                  <div className="space-y-4">
+                    <DraggableTable
+                      columns={columns}
+                      records={paginatedRecords}
+                      selectedIds={selectedIds}
+                      onToggleSelect={toggleSelect}
+                      onSelectAllFiltered={selectAllFiltered}
+                      onViewRecord={handleViewRecord}
+                      onDeleteRecord={handleDeleteRecord}
+                      onSort={handleSort}
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      getUserName={getUserName}
+                      getRowBgColor={getRowBgColor}
+                      getMarginColor={getMarginColor}
+                      onColumnsChange={setColumns}
+                    />
+
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                        <span>
+                          Показаны {pageStart}&ndash;{pageEnd} из {sortedRecords.length}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Label htmlFor="page-size">На странице</Label>
+                          <Select
+                            value={String(pageSize)}
+                            onValueChange={(value) => {
+                              setPageSize(Number(value) as (typeof pageSizeOptions)[number])
+                              setCurrentPage(1)
+                            }}
+                          >
+                            <SelectTrigger id="page-size" className="w-24">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {pageSizeOptions.map((size) => (
+                                <SelectItem key={size} value={String(size)}>
+                                  {size}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <Pagination className="justify-start md:justify-end">
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              href="#"
+                              className={safeCurrentPage <= 1 ? "pointer-events-none opacity-50" : undefined}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                if (safeCurrentPage > 1) handlePageChange(safeCurrentPage - 1)
+                              }}
+                            />
+                          </PaginationItem>
+                          {paginationItems.map((item, index) => (
+                            <PaginationItem key={`${item}-${index}`}>
+                              {item === "ellipsis" ? (
+                                <PaginationEllipsis />
+                              ) : (
+                                <PaginationLink
+                                  href="#"
+                                  isActive={item === safeCurrentPage}
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    handlePageChange(item)
+                                  }}
+                                >
+                                  {item}
+                                </PaginationLink>
+                              )}
+                            </PaginationItem>
+                          ))}
+                          <PaginationItem>
+                            <PaginationNext
+                              href="#"
+                              className={safeCurrentPage >= totalPages ? "pointer-events-none opacity-50" : undefined}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                if (safeCurrentPage < totalPages) handlePageChange(safeCurrentPage + 1)
+                              }}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
