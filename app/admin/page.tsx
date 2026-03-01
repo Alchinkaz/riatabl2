@@ -17,6 +17,7 @@ import { RecordViewDialog } from "@/components/admin/record-view"
 import { MigrationPanel } from "@/components/admin/migration-panel"
 import { ColumnVisibilityControl, ColumnConfig } from "@/components/admin/column-visibility-control"
 import { DraggableTable } from "@/components/admin/draggable-table"
+import { RecordsExcelIO } from "@/components/admin/records-excel-io"
 import { useFormulaSettings } from "@/contexts/formula-settings-context"
 import { calculateSalesRecordWithSettings } from "@/lib/calculations-with-settings"
 import { recordStorage, type StoredRecord } from "@/lib/storage"
@@ -60,14 +61,14 @@ export default function AdminDashboard() {
   const pageSizeOptions = [10, 20, 30, 50, 100] as const
   const [pageSize, setPageSize] = useState<(typeof pageSizeOptions)[number]>(20)
   const [currentPage, setCurrentPage] = useState(1)
-  
+
   // Состояние для управления видимостью колонок
   const [columns, setColumns] = useState<ColumnConfig[]>([
     // Обязательные колонки (нельзя скрыть) - Автор первым
     { key: "author", label: "Автор", description: "Автор записи", visible: true, required: true, cellAlign: "left" },
     { key: "date", label: "Дата", description: "Дата записи", visible: true, required: true, cellAlign: "center" },
     { key: "counterparty", label: "Контрагент", description: "Название контрагента", visible: true, required: true, cellAlign: "left" },
-    
+
     // Основные поля
     { key: "name", label: "Наименование", description: "Наименование товара", visible: true, cellAlign: "left" },
     { key: "quantity", label: "Кол-во", description: "Количество единиц", visible: true, cellAlign: "right" },
@@ -75,7 +76,7 @@ export default function AdminDashboard() {
     { key: "total_delivery", label: "Общая сумма доставки", description: "Общая сумма доставки", visible: false, cellAlign: "right" },
     { key: "selling_with_bonus", label: "Цена продажи", description: "Цена продажи с бонусом", visible: true, cellAlign: "right" },
     { key: "client_bonus", label: "Общий бонус клиента", description: "Общий бонус клиента", visible: true, cellAlign: "right" },
-    
+
     // Расчетные поля
     { key: "delivery_per_unit", label: "Дост-в за ед", description: "Доставка за единицу", visible: false, cellAlign: "right" },
     { key: "sum_with_delivery", label: "Сумма за ед. с доставкой", description: "Сумма за единицу с доставкой", visible: false, cellAlign: "right" },
@@ -93,7 +94,7 @@ export default function AdminDashboard() {
     { key: "kpn_tax", label: "КПН", description: "Налоги КПН", visible: false, cellAlign: "right" },
     { key: "net_income_unit", label: "Чистый доход за ед.", description: "Чистый доход за единицу", visible: false, cellAlign: "right" },
     { key: "margin_percent", label: "Маржа %", description: "Процент маржи", visible: true, cellAlign: "right" },
-    
+
     // Общие суммы
     { key: "total_selling_vat", label: "Общая сумма продажи с НДС", description: "Общая сумма продажи с НДС", visible: false, cellAlign: "right" },
     { key: "total_selling_bonus", label: "Общая сумма с бонусом", description: "Общая сумма продажи с НДС с учетом бонуса клиента", visible: false, cellAlign: "right" },
@@ -103,7 +104,7 @@ export default function AdminDashboard() {
     { key: "total_manager_bonuses", label: "Бонусы менеджера", description: "Общая сумма бонусов менеджера", visible: false, cellAlign: "right" },
     { key: "unit_bonus_client", label: "Бонус за ед", description: "Бонус клиента за единицу", visible: false, cellAlign: "right" },
   ])
-  
+
   const [sortKey, setSortKey] = useState<
     | "author"
     | "date"
@@ -422,7 +423,7 @@ export default function AdminDashboard() {
         return record.total_manager_bonuses || 0
       case "unit_bonus_client":
         return record.unit_bonus_client || 0
-      
+
       default:
         return 0
     }
@@ -626,7 +627,7 @@ export default function AdminDashboard() {
                     <Label>Колонки</Label>
                     <ColumnVisibilityControl columns={columns} onColumnsChange={setColumns} />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label>Месяц</Label>
                     <Select value={filterMonth} onValueChange={setFilterMonth}>
@@ -701,8 +702,19 @@ export default function AdminDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Все записи расчетов</CardTitle>
-                <CardDescription>Полный доступ ко всем записям с возможностью редактирования</CardDescription>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <CardTitle>Все записи расчетов</CardTitle>
+                    <CardDescription>Полный доступ ко всем записям с возможностью редактирования</CardDescription>
+                  </div>
+                  <RecordsExcelIO
+                    records={filteredRecords}
+                    getUserName={getUserName}
+                    onImportSuccess={handleFormSuccess}
+                    config={config}
+                    customFormulas={customFormulas}
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
@@ -834,32 +846,32 @@ export default function AdminDashboard() {
           onSuccess={handleFormSuccess}
         />
 
-      <RecordViewDialog
-        open={isViewOpen}
-        onOpenChange={setIsViewOpen}
-        record={selectedRecord}
-        onSuccess={handleFormSuccess}
-        onDeleteRecord={handleDeleteRecord}
-      />
+        <RecordViewDialog
+          open={isViewOpen}
+          onOpenChange={setIsViewOpen}
+          record={selectedRecord}
+          onSuccess={handleFormSuccess}
+          onDeleteRecord={handleDeleteRecord}
+        />
 
-      {/* Counterparty Search Dialog */}
-      <CommandDialog open={isCounterpartySearchOpen} onOpenChange={setIsCounterpartySearchOpen} title="Поиск контрагента">
-        <CommandInput placeholder="Введите название контрагента..." />
-        <CommandList>
-          <CommandEmpty>Ничего не найдено</CommandEmpty>
-          {Array.from(new Set(records.map((r) => r.counterparty || ""))).map((cp) => (
-            <CommandItem
-              key={cp || "__empty__"}
-              onSelect={() => {
-                setFilterCounterparty(cp || "__empty__")
-                setIsCounterpartySearchOpen(false)
-              }}
-            >
-              {(cp && cp.trim()) ? cp : "Не указан"}
-            </CommandItem>
-          ))}
-        </CommandList>
-      </CommandDialog>
+        {/* Counterparty Search Dialog */}
+        <CommandDialog open={isCounterpartySearchOpen} onOpenChange={setIsCounterpartySearchOpen} title="Поиск контрагента">
+          <CommandInput placeholder="Введите название контрагента..." />
+          <CommandList>
+            <CommandEmpty>Ничего не найдено</CommandEmpty>
+            {Array.from(new Set(records.map((r) => r.counterparty || ""))).map((cp) => (
+              <CommandItem
+                key={cp || "__empty__"}
+                onSelect={() => {
+                  setFilterCounterparty(cp || "__empty__")
+                  setIsCounterpartySearchOpen(false)
+                }}
+              >
+                {(cp && cp.trim()) ? cp : "Не указан"}
+              </CommandItem>
+            ))}
+          </CommandList>
+        </CommandDialog>
       </main>
     </div>
   )
